@@ -1,0 +1,11 @@
+cmake_minimum_required(VERSION 3.16)
+project(stnl_tests)
+set(CMAKE_CXX_STANDARD 20)
+
+set(EXECUTABLE_OUTPUT_PATH ${EXEC_PATH})
+
+link_directories(${LIB_PATH})
+
+# 使用CMake父节点中设置的变量名作为生成的可执行程序的名称
+add_executable(logger_test logger_test.cpp)
+target_link_libraries(logger_test ${STNL} pthread boost_timer)

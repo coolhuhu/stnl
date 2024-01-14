@@ -1,5 +1,5 @@
-#ifndef LOGGER_H
-#define LOGGER_H
+#ifndef STNL_LOGGER_H
+#define STNL_LOGGER_H
 
 #include <sys/time.h>
 #include <string>
@@ -18,7 +18,7 @@
 #include "Thread.h"
 #include "CountDownLatch.h"
 
-namespace cpp_example
+namespace stnl
 {
     class Logger;
     class LogContext;

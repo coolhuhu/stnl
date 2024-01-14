@@ -2,7 +2,7 @@
 #include <assert.h>
 #include <iomanip>
 
-namespace cpp_example
+namespace stnl
 {
 
     void formatTime(struct timeval &tv, char *buffer, int buffer_size = 20)
@@ -71,6 +71,11 @@ namespace cpp_example
 
     void Logger::handlerWrite(const LogContextPtr &context)
     {
+        // 若没有设置LogHandler,则添加一个ConsoleHandler作为默认的LogHandler
+        if (handlers_.empty()) {
+            handlers_.emplace("DefaultConsoleHandler", std::make_shared<ConsoleHandler>("DefaultConsoleHandler", LogLevel::INFO));
+        }
+
         for (auto &handler : handlers_)
         {
             handler.second->write(context);
@@ -109,6 +114,8 @@ namespace cpp_example
 
         // @todo 获取线程id
     }
+
+    /* --------------------------- LogRecorder --------------------------*/
 
     LogRecorder::LogRecorder(const std::string_view sourceFilename, std::string funcname, int line, LogLevel logLevel, Logger &logger) : context_(new LogContext(sourceFilename, funcname, line, logLevel)), logger_(logger)
     {

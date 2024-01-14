@@ -8,6 +8,9 @@ set(EXEC_PATH ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 
 file(GLOB SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
 
+set(STNL stnl)
+
 add_subdirectory(src)
 add_subdirectory(tests)
+
 
