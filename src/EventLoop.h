@@ -19,7 +19,7 @@
 namespace stnl
 {
 
-    class EventManager;
+    class Channel;
     class Selector;
 
     /**
@@ -36,13 +36,16 @@ namespace stnl
 
         void loop();
 
+        void updateChannel(Channel*);
+
     private:
-        using EventManagerList = std::vector<EventManager*>;
+        using ChannelVector = std::vector<Channel*>;
 
         const int tid_;     // EventLoop所在线程的唯一标识
         std::unique_ptr<Selector> selector_;
 
         std::atomic_bool looping_;
+        std::atomic_bool running_;
     };
 
 }
