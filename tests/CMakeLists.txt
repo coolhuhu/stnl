@@ -9,3 +9,6 @@ link_directories(${LIB_PATH})
 # 使用CMake父节点中设置的变量名作为生成的可执行程序的名称
 add_executable(logger_test logger_test.cpp)
 target_link_libraries(logger_test ${STNL} pthread boost_timer)
+
+add_executable(EventLoop_test EventLoop_test.cpp)
+target_link_libraries(EventLoop_test ${STNL} pthread)

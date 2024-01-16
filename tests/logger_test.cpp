@@ -32,7 +32,7 @@ void test_ConsoleLogger()
         LOG_ERROR << "log message. " << i;
         // LOG_FATAL << "log message. " << i;
         
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
     } 
 }
 
@@ -88,6 +88,5 @@ void test_AsyncLogging()
 
 int main()
 {
-    test_defaultLogger();
-    // test_AsyncLogging();
+    test_ConsoleLogger();
 }

@@ -9,19 +9,19 @@
 #include <string_view>
 #include <string>
 #include <functional>
-#include <assert.h>
-
+#include <cassert>
 
 class Thread
 {
 public:
     using ThreadFunction = std::function<void()>;
 
-    Thread(std::string_view threadName, ThreadFunction func): threadName_(threadName), func_(func), running_(false) {}
+    Thread(std::string_view threadName, ThreadFunction func) : threadName_(threadName), func_(func), running_(false) {}
 
     ~Thread()
     {
-        if (running_ && thread_.joinable()) {
+        if (running_ && thread_.joinable())
+        {
             thread_.detach();
         }
     }
@@ -34,8 +34,10 @@ public:
         thread_ = std::thread(func_);
     }
 
-    void join() {
-        if (thread_.joinable()) {
+    void join()
+    {
+        if (thread_.joinable())
+        {
             thread_.join();
         }
     }
@@ -45,8 +47,7 @@ private:
     std::string threadName_;
     ThreadFunction func_;
     std::thread thread_;
+    std::thread::id tid_;
 };
-
-
 
 #endif

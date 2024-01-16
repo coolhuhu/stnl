@@ -15,6 +15,7 @@
 #include <memory>
 #include <vector>
 #include <atomic>
+#include <functional>
 
 namespace stnl
 {
@@ -29,12 +30,15 @@ namespace stnl
     class EventLoop
     {
     public:
+        using Func = std::function<void()>;
 
         EventLoop();
 
         ~EventLoop();
 
         void loop();
+
+        void runInLoop(Func func);
 
         void updateChannel(Channel*);
 

@@ -27,6 +27,12 @@ namespace stnl
     class Channel
     {
     public:
+        enum class EventState {
+            NEW,
+            ADDED,
+            DELETED
+        };
+
         using WriteEventCallback = std::function<void()>;
         using ReadEventCallback = std::function<void()>;
         using ErrorEventCallback = std::function<void()>;
@@ -53,7 +59,7 @@ namespace stnl
             // TODO: 设置 watchedEvent_
             // watchedEvent_ |= 
             // 将 fd_ 上关注事件的更新更新到 Selector 中
-            watchedEventType_ |= kReadEvent;
+            requestedEvents_ |= kReadEvent;
             update();
         }
 
@@ -62,7 +68,7 @@ namespace stnl
             // TODO: 设置 watchedEvent_
             // watchedEvent_ |= 
             // 将 fd_ 上关注事件的更新更新到 Selector 中
-            watchedEventType_ &= ~kReadEvent;
+            requestedEvents_ &= ~kReadEvent;
             update();
         }
 
@@ -71,7 +77,7 @@ namespace stnl
             // TODO: 设置 watchedEvent_
             // watchedEvent_ |= 
             // 将 fd_ 上关注事件的更新更新到 Selector 中
-            watchedEventType_ |= kWriteEvent;
+            requestedEvents_ |= kWriteEvent;
             update();
         }
 
@@ -80,11 +86,20 @@ namespace stnl
             // TODO: 设置 watchedEvent_
             // watchedEvent_ |= 
             // 将 fd_ 上关注事件的更新更新到 Selector 中
-            watchedEventType_ &= ~kWriteEvent;
+            requestedEvents_ &= ~kWriteEvent;
             update();
         }
 
-        int events() const { return activeEventType_; }
+        int events() const { return returnedEvents_; }
+
+        // 例如：当epoll_wait返回时，通过调用channel的void setReturnedEvent(int type)该方法来设置产生的事件类型
+        void setReturnedEvent(int type) { returnedEvents_ = type; }
+
+        EventState getEventState() { return eventState_; }
+
+        void setEventState(EventState state) { eventState_ = state; }
+
+        bool isNoEvent() const { return requestedEvents_ == kNoneEvent; }
         
 
     private:
@@ -95,13 +110,19 @@ namespace stnl
         EventLoop *loop_;
         const int fd_;
 
-        int watchedEventType_; // 关注的事件类型
-        int activeEventType_;  // 发生的事件类型
+        int requestedEvents_; // 关注的事件类型
+        int returnedEvents_;  // 发生的事件类型
+
+        EventState eventState_; 
 
         WriteEventCallback writeEventCallback_;
         ReadEventCallback readEventCallback_;
         ErrorEventCallback errorEventCallback_;
         CloseEventCallback closeEventCallback_;
+
+        static const int kNoneEvent;
+        static const int kReadEvent;
+        static const int kWriteEvent;
     };
 
 
