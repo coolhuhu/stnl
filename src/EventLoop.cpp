@@ -42,6 +42,12 @@ namespace stnl
         looping_ = false;
     }
 
+    void EventLoop::quit()
+    {
+        looping_ = false;
+        running_ = false;
+    }
+
     void EventLoop::runInLoop(Func func)
     {
         // FIXME:
@@ -54,5 +60,12 @@ namespace stnl
     void EventLoop::updateChannel(Channel *channel)
     {
         selector_->updateChannel(channel);
+    }
+
+    void EventLoop::removeChannel(Channel* channel)
+    {
+        // TODO:
+
+        selector_->removeChannel(channel);
     }
 }

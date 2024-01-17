@@ -42,6 +42,11 @@ namespace stnl
 
         virtual void updateChannel(Channel*) = 0;
 
+        /**
+         * 将指定的Channel从EventLoop中移除
+        */
+        virtual void removeChannel(Channel*) = 0;
+
     protected:
         // key为文件描述符, value为 EventManager管理的文件描述符
         using ChannelMap = std::map<int, Channel*>;

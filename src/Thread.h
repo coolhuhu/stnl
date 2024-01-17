@@ -11,6 +11,9 @@
 #include <functional>
 #include <cassert>
 
+namespace stnl
+{
+
 class Thread
 {
 public:
@@ -36,6 +39,7 @@ public:
 
     void join()
     {
+        assert(running_);
         if (thread_.joinable())
         {
             thread_.join();
@@ -47,7 +51,8 @@ private:
     std::string threadName_;
     ThreadFunction func_;
     std::thread thread_;
-    std::thread::id tid_;
 };
+
+}
 
 #endif

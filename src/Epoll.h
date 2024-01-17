@@ -29,6 +29,8 @@ namespace stnl
 
         void updateChannel(Channel* channel) override;
 
+        void removeChannel(Channel* channel) override;
+
         void update(Channel* channel, int operation);
 
         static const int EPOLL_TIMEOUT = 5000;     // 5s

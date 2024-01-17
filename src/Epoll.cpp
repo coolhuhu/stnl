@@ -112,6 +112,10 @@ namespace stnl
         }
     }
 
+    void Epoll::removeChannel(Channel *channel)
+    {
+    }
+
     void Epoll::update(Channel *channel, int operation)
     {
         struct epoll_event event;

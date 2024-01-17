@@ -5,9 +5,6 @@
 using namespace stnl;
 
 
-
-
-
 void func()
 {
     std::cout << "func()..." << std::endl;

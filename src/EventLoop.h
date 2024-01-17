@@ -38,9 +38,13 @@ namespace stnl
 
         void loop();
 
+        void quit();
+
         void runInLoop(Func func);
 
         void updateChannel(Channel*);
+
+        void removeChannel(Channel*);
 
     private:
         using ChannelVector = std::vector<Channel*>;
