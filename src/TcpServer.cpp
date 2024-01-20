@@ -1,8 +1,11 @@
 #include "TcpServer.h"
 #include <fcntl.h>
+#include <stdio.h>
 #include <cassert>
+#include <unistd.h>
 
 using namespace stnl;
+using namespace std::placeholders;
 
 /* ------------------------------------------ Acceptor --------------------------------------------------- */
 
@@ -53,6 +56,7 @@ void Acceptor::handleRead()
     SockAddr client_addr;
     int connect_fd = listenSocket_.accept(client_addr);
     if (connect_fd >= 0) {
+        // TcpServer中传入该回调函数
         if (newConnectionCallback_) {
             newConnectionCallback_(connect_fd, client_addr);
         }
@@ -62,6 +66,7 @@ void Acceptor::handleRead()
         }
     }
     else {
+        // FIXME：不是线程安全的
         if (errno == EMFILE) {
             ::close(idleFd_);
             idleFd_ = ::accept(listenSocket_.fd(), nullptr, nullptr);
@@ -69,4 +74,26 @@ void Acceptor::handleRead()
             idleFd_ = ::open("/dev/null", O_RDONLY | O_CLOEXEC);
         }
     }
+}
+
+
+/* -------------------------------------- TcpServer ---------------------------------------- */
+
+TcpServer::TcpServer(const SockAddr& listenAddr, std::string_view loopName, int threadNums)
+                    : loop_(new EventLoop()),
+                    threadPool_(new EventLoopThreadPool(loop_.get(), loopName, threadNums)),
+                    acceptor_(new Acceptor(loop_.get(), listenAddr))
+{
+    acceptor_->setNewConnectionCallback(std::bind(&TcpServer::newConnectionCallback, this, _1, _2));
+}
+
+TcpServer::~TcpServer()
+{
+    // TODO: 关闭所有连接
+}
+
+
+void TcpServer::newConnectionCallback(int socketFd, const SockAddr& peerAddr)
+{
+
 }

@@ -1,13 +1,3 @@
-/**
- * @file Socket.h
- * @author your name (you@domain.com)
- * @brief 
- * @version 0.1
- * @date 2024-01-17
- * 
- * @copyright Copyright (c) 2024
- * 
- */
 
 
 #ifndef STNL_SOCKET_H
@@ -40,6 +30,16 @@ namespace stnl
 
         static int createNonblockSocket(int domain);
 
+        static void shutdownWrite(int socketFd);
+
+        static void setTcpNoDelay(int socketFd, bool on);
+
+        static void setAddrReuse(int socketFd, bool on);
+
+        static void setPortReuse(int socketFd, bool on);
+
+        static void setKeepAlive(int socketFd, bool on);
+
     };
 
     class SockAddr
@@ -61,7 +61,7 @@ namespace stnl
 
         bool is_ipv6() const { return ipv6_; }
 
-        const struct sockaddr* getSockAddr() const;
+        struct sockaddr* getSockAddr();
 
         void setSockAddr6(const struct sockaddr_in6);
 
@@ -93,7 +93,7 @@ namespace stnl
 
         int fd() const { return socketFd_; }
 
-        void bindAddress(const SockAddr& sockaddr);
+        void bindAddress(SockAddr& sockaddr);
 
         void listen();
 

@@ -16,6 +16,8 @@
 #include <vector>
 #include <atomic>
 #include <functional>
+#include <thread>
+#include <mutex>
 
 namespace stnl
 {
@@ -42,18 +44,49 @@ namespace stnl
 
         void runInLoop(Func func);
 
+        void queueInLoop(Func func);
+
         void updateChannel(Channel*);
 
         void removeChannel(Channel*);
 
+        static EventLoop* getEventLoopOfCurrentThread();
+
+        bool isInLoopThread() const { return tid_ == std::this_thread::get_id(); }
+
+        void assertInLoopThread()
+        {
+            if (!isInLoopThread()) {
+                abortNotInLoopThread();
+            }
+        }
+
+    private:
+        void doPendingFunctions();
+
+        /**
+         * wakeupFd_上可读事件的回调函数。从wakeupFd_上读取数据。
+        */
+        void wakeupReadCallback();
+
+        void abortNotInLoopThread();
+
+        void wakeup();
+
     private:
         using ChannelVector = std::vector<Channel*>;
 
-        const int tid_;     // EventLoop所在线程的唯一标识
+        const std::thread::id tid_;     // EventLoop所在线程的唯一标识
         std::unique_ptr<Selector> selector_;
 
         std::atomic_bool looping_;
         std::atomic_bool running_;
+
+        std::mutex mutex_;
+        int wakeupFd_;
+        std::unique_ptr<Channel> wakeupChannel_;
+        std::vector<Func> pendingFunctions_;
+        bool callingPendingFunctions_;
     };
 
 }

@@ -10,6 +10,8 @@
 #include <string>
 #include <functional>
 #include <cassert>
+#include <mutex>
+#include <condition_variable>
 
 namespace stnl
 {
@@ -35,6 +37,7 @@ public:
         assert(!thread_.joinable());
         running_ = true;
         thread_ = std::thread(func_);
+
     }
 
     void join()
@@ -47,10 +50,15 @@ public:
     }
 
 private:
+    void threadFuncWarper(ThreadFunction func);
+
+private:
     bool running_;
     std::string threadName_;
     ThreadFunction func_;
     std::thread thread_;
+    std::mutex mutex_;
+    std::condition_variable_any cv_;
 };
 
 }

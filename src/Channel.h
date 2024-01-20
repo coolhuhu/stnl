@@ -1,23 +1,13 @@
-/**
- * @file Channel.h
- * @author lianghu (coolhuhu@foxmail.com)
- * @brief
- * @version 0.1
- * @date 2024-01-11
- *
- * @copyright Copyright (c) 2024
- *
- */
+
 
 #ifndef STNL_Channel_H
 #define STNL_Channel_H
 
 #include <functional>
+#include "EventLoop.h"
 
 namespace stnl
 {
-
-    class EventLoop;
 
     /**
      * 管理文件描述符上事件的类,设置Selector关注的事件类型，事件发生后的回调函数等
@@ -111,6 +101,10 @@ namespace stnl
         void setEventState(EventState state) { eventState_ = state; }
 
         bool isNoEvent() const { return requestedEvents_ == kNoneEvent; }
+
+        bool writeable() const { return requestedEvents_ & kWriteEvent; }
+
+        bool readable() const { return requestedEvents_ & kReadEvent; }
         
 
     private:

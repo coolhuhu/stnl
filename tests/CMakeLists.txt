@@ -13,6 +13,8 @@ target_link_libraries(logger_test ${STNL} pthread boost_timer)
 add_executable(EventLoop_test EventLoop_test.cpp)
 target_link_libraries(EventLoop_test ${STNL} pthread)
 
-
 add_executable(Socket_test Socket_test.cpp)
 target_link_libraries(Socket_test ${STNL} pthread)
+
+add_executable(EventLoopThread_test EventLoopThread_test.cpp)
+target_link_libraries(EventLoopThread_test ${STNL} pthread)

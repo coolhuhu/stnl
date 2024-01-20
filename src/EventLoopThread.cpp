@@ -1,4 +1,5 @@
 #include "EventLoopThread.h"
+#include "logger.h"
 
 namespace stnl
 {
@@ -23,9 +24,10 @@ namespace stnl
         {
             std::unique_lock<std::mutex> locker(mutex_);
             cv_.wait(locker, [&]()
-                     { return loop != nullptr; });
+                     { return loop_ != nullptr; });
+            loop = loop_;
         }
-        loop = loop_;
+        
         return loop;
     }
 
