@@ -111,6 +111,7 @@ namespace stnl
             
             // 1. epoll_wait(), 获取有事件发生的events
             selector_->select(activeChannels, Epoll::EPOLL_TIMEOUT);
+            LOG_INFO << "select()";
 
             // 2. 执行 events 上注册的回调函数
             for (auto channel : activeChannels)
@@ -118,6 +119,7 @@ namespace stnl
                 channel->handleEvents();
             }
 
+            LOG_INFO << "doPendingFunctions()";
             doPendingFunctions();
         }
 
@@ -128,7 +130,7 @@ namespace stnl
     {
         running_ = false;
 
-        // FIXME: 若在其他线程（loop被创建的线程）调用quit()，需要进行哪些处理。
+        // 若在其他线程（loop被创建的线程）调用quit()，需要进行哪些处理。
         if (!isInLoopThread()) {
             wakeup();
         }
@@ -141,6 +143,7 @@ namespace stnl
                 func();
             }
             else {
+                LOG_INFO << "queueInLoop(std::move(func))";
                 queueInLoop(std::move(func));
             }
         }
@@ -154,6 +157,7 @@ namespace stnl
         }
 
         if (!isInLoopThread() || callingPendingFunctions_) {
+            LOG_INFO << "wakeup()";
             wakeup();
         }
     }

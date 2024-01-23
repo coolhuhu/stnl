@@ -18,3 +18,6 @@ target_link_libraries(Socket_test ${STNL} pthread)
 
 add_executable(EventLoopThread_test EventLoopThread_test.cpp)
 target_link_libraries(EventLoopThread_test ${STNL} pthread)
+
+add_executable(TimeUtil_test TimeUtil_test.cpp)
+target_link_libraries(TimeUtil_test ${STNL} pthread)

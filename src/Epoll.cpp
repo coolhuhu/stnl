@@ -20,7 +20,7 @@ namespace stnl
     class EventLoop;
 
     Epoll::Epoll(EventLoop* loop): Selector(loop), 
-                                   epollFd_(epoll_create1(EPOLL_CLOEXEC)),
+                                   epollFd_(::epoll_create1(EPOLL_CLOEXEC)),
                                    events_(InitEventVectorSize)
     {
         if (epollFd_ < 0) {
@@ -29,7 +29,7 @@ namespace stnl
     }
 
     Epoll::~Epoll() {
-        close(epollFd_);
+        ::close(epollFd_);
     }
 
     void Epoll::select(ChannelVector& activeChannels, int timeout)

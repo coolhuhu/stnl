@@ -21,7 +21,7 @@ int main()
 
     // 将 threadFunc 传入到IO线程所在的线程中执行
     loop->runInLoop(threadFunc);
-    std::this_thread::sleep_for(std::chrono::seconds(2));
+    std::this_thread::sleep_for(std::chrono::seconds(10));
 
     loop->quit();
 }
