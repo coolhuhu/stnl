@@ -24,6 +24,10 @@ namespace stnl
 
     class Channel;
     class Selector;
+    class TimerId;
+    class TimerQueue;
+    class Timestamp;
+    using TimerCallback = std::function<void()>;
 
     /**
      * Reactor, one loop per thread.
@@ -61,6 +65,14 @@ namespace stnl
             }
         }
 
+        TimerId runAt(Timestamp time, TimerCallback cb);
+
+        TimerId runAfter(double delay, TimerCallback cb);
+
+        TimerId runEvery(double interval, TimerCallback cb);
+
+        void cancelTimer(TimerId timerId);
+
     private:
         void doPendingFunctions();
 
@@ -81,6 +93,8 @@ namespace stnl
 
         std::atomic_bool looping_;
         std::atomic_bool running_;
+
+        std::unique_ptr<TimerQueue> timerQueue_;
 
         std::mutex mutex_;
         int wakeupFd_;

@@ -6,36 +6,41 @@
 #include <thread>
 #include "logger.h"
 #include <unistd.h>
+#include "Timer.h"
+
 
 namespace stnl
 {
-    thread_local EventLoop* loopInCurrentThread = nullptr;
+    thread_local EventLoop *loopInCurrentThread = nullptr;
 
     int createEventfd()
     {
         int fd = eventfd(0, EFD_CLOEXEC | EFD_NONBLOCK | EFD_SEMAPHORE);
-        if (fd < 0) {
+        if (fd < 0)
+        {
             LOG_FATAL << "eventfd*() error";
         }
         return fd;
     }
 
     // FIXME: tid_初始化
-    EventLoop::EventLoop():looping_(false), running_(false),
-                           tid_(std::this_thread::get_id()), 
-                           selector_(new Epoll(this)),
-                           wakeupFd_(createEventfd()),
-                           wakeupChannel_(new Channel(this, wakeupFd_)),
-                           callingPendingFunctions_(false)
-
+    EventLoop::EventLoop() : looping_(false), running_(false),
+                             tid_(std::this_thread::get_id()),
+                             selector_(new Epoll(this)),
+                             wakeupFd_(createEventfd()),
+                             wakeupChannel_(new Channel(this, wakeupFd_)),
+                             callingPendingFunctions_(false),
+                             timerQueue_(new TimerQueue(this))
     {
         LOG_DEBUG << "EventLoop created.";
 
-        if (loopInCurrentThread) {
+        if (loopInCurrentThread)
+        {
             // 一个线程中最多创建一个 EventLoop 对象
             LOG_FATAL << "A thread can create a maximum of one EventLoop object.";
         }
-        else {
+        else
+        {
             loopInCurrentThread = this;
         }
 
@@ -43,14 +48,15 @@ namespace stnl
         wakeupChannel_->enableRead();
     }
 
-    EventLoop::~EventLoop() {
+    EventLoop::~EventLoop()
+    {
         wakeupChannel_->disableAll();
         wakeupChannel_->remove();
         ::close(wakeupFd_);
         loopInCurrentThread = nullptr;
     }
 
-    EventLoop* EventLoop::getEventLoopOfCurrentThread()
+    EventLoop *EventLoop::getEventLoopOfCurrentThread()
     {
         return loopInCurrentThread;
     }
@@ -65,7 +71,8 @@ namespace stnl
             functions.swap(pendingFunctions_);
         }
 
-        for (auto& func : functions) {
+        for (auto &func : functions)
+        {
             func();
         }
 
@@ -76,14 +83,15 @@ namespace stnl
     {
         uint64_t one = 1;
         ssize_t n = ::read(wakeupFd_, &one, sizeof(one));
-        if (n != sizeof(one)) {
+        if (n != sizeof(one))
+        {
             LOG_ERROR << "EventLoop::wakeupReadCallback() should read 8 bytes, not " << n << " bytes";
         }
     }
 
     void EventLoop::abortNotInLoopThread()
     {
-        LOG_FATAL << "EventLoop::abortNotInLoopThread(), " 
+        LOG_FATAL << "EventLoop::abortNotInLoopThread(), "
                   << "EventLoop was created in thread id = " << tid_
                   << ", current thread id = " << std::this_thread::get_id();
     }
@@ -92,7 +100,8 @@ namespace stnl
     {
         uint64_t one = 1;
         ssize_t n = ::write(wakeupFd_, &one, sizeof(one));
-        if (n != sizeof(one)) {
+        if (n != sizeof(one))
+        {
             LOG_ERROR << "EventLoop::wakeup() should write 8 bytes, not " << n << " bytes";
         }
     }
@@ -108,7 +117,7 @@ namespace stnl
         while (running_)
         {
             activeChannels.clear();
-            
+
             // 1. epoll_wait(), 获取有事件发生的events
             selector_->select(activeChannels, Epoll::EPOLL_TIMEOUT);
             LOG_INFO << "select()";
@@ -131,18 +140,22 @@ namespace stnl
         running_ = false;
 
         // 若在其他线程（loop被创建的线程）调用quit()，需要进行哪些处理。
-        if (!isInLoopThread()) {
+        if (!isInLoopThread())
+        {
             wakeup();
         }
     }
 
     void EventLoop::runInLoop(Func func)
     {
-        if (func) {
-            if (isInLoopThread()) {
+        if (func)
+        {
+            if (isInLoopThread())
+            {
                 func();
             }
-            else {
+            else
+            {
                 LOG_INFO << "queueInLoop(std::move(func))";
                 queueInLoop(std::move(func));
             }
@@ -156,7 +169,8 @@ namespace stnl
             pendingFunctions_.emplace_back(std::move(func));
         }
 
-        if (!isInLoopThread() || callingPendingFunctions_) {
+        if (!isInLoopThread() || callingPendingFunctions_)
+        {
             LOG_INFO << "wakeup()";
             wakeup();
         }
@@ -167,10 +181,33 @@ namespace stnl
         selector_->updateChannel(channel);
     }
 
-    void EventLoop::removeChannel(Channel* channel)
+    void EventLoop::removeChannel(Channel *channel)
     {
         // TODO:
 
         selector_->removeChannel(channel);
     }
+
+    TimerId EventLoop::runAt(Timestamp time, TimerCallback cb)
+    {
+        return timerQueue_->insert(std::move(cb), time, 0.0);
+    }
+
+    TimerId EventLoop::runAfter(double delay, TimerCallback cb)
+    {
+        Timestamp time(addTime(Timestamp::now(), delay));
+        return runAt(time, std::move(cb));
+    }
+
+    TimerId EventLoop::runEvery(double interval, TimerCallback cb)
+    {
+        Timestamp time(addTime(Timestamp::now(), interval));
+        return timerQueue_->insert(std::move(cb), time, interval);
+    }
+
+    void EventLoop::cancelTimer(TimerId timerId)
+    {
+        timerQueue_->cancel(timerId);
+    }
+
 }

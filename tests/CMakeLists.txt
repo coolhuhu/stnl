@@ -21,3 +21,6 @@ target_link_libraries(EventLoopThread_test ${STNL} pthread)
 
 add_executable(TimeUtil_test TimeUtil_test.cpp)
 target_link_libraries(TimeUtil_test ${STNL} pthread)
+
+add_executable(Timer_test Timer_test.cpp)
+target_link_libraries(Timer_test ${STNL} pthread)

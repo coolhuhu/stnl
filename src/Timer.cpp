@@ -32,7 +32,7 @@ namespace stnl
     Timer::Timer(TimerCallback cb, Timestamp when, Seconds interval)
                 : callback_(std::move(cb)), expiration_(when), 
                   interval_(interval), repeat_(interval_ > 0.0),
-                  id_(++timerCount_)
+                  id_(++timerCount_, this)
     {
     }
 
@@ -50,7 +50,8 @@ namespace stnl
 
     TimerQueue::TimerQueue(EventLoop* loop): loop_(loop),
                                              timerfd_(createTimerfd()),
-                                             timerChannle_(loop_, timerfd_)
+                                             timerChannle_(loop_, timerfd_),
+                                             callingExpiredTimers_(false)
     {
         timerChannle_.setReadEventCallback(std::bind(&TimerQueue::timerReadingCallback, this));
         timerChannle_.enableRead();
@@ -66,6 +67,35 @@ namespace stnl
         timers_.clear();    // 因为使用unique_ptr管理Timer，可以不需要显示调用 
     }
 
+    void TimerQueue::cancel(TimerId timerId)
+    {
+        loop_->runInLoop(std::bind(&TimerQueue::cancelInLoop, this, timerId));
+    }
+
+    void TimerQueue::cancelInLoop(TimerId timerId)
+    {
+        loop_->assertInLoopThread();
+        assert(timers_.size() == activeTimers_.size());
+        Timer *timer = timerId.getTimer();
+        auto iter = activeTimers_.find(timerId);
+        if (iter != activeTimers_.end())
+        {
+            auto range = timers_.equal_range(timer->expiration());
+            auto ret = std::find_if(range.first, range.second, [&](auto& it){
+                return it.second.get() == timer;
+            });
+            if (ret != range.second) {
+                timers_.erase(ret);
+            }
+            activeTimers_.erase(timerId);
+        }
+        else if (callingExpiredTimers_) {
+            cancelingTimers_.emplace(timer);
+        }
+
+        assert(timers_.size() == activeTimers_.size());
+    }
+
     /**
      * TODO: 这个函数务必通过测试
     */
@@ -79,8 +109,18 @@ namespace stnl
                             return std::move(e.second);
                        });
 
-        // 一定要移除已到期的定时器
+        // 从timers_和activeTimers中移除过期的定时器
         timers_.erase(timers_.begin(), iter);
+        for (auto& timer: expirationTimers) {
+            TimerId timerId(timer->id(), timer.get());
+            auto iter = activeTimers_.find(timerId);
+            if (iter != activeTimers_.end()) {
+                activeTimers_.erase(timerId);
+            }
+            // else: error.
+        }
+
+        assert(timers_.size() == activeTimers_.size());
         return std::move(expirationTimers);
     }
 
@@ -88,9 +128,10 @@ namespace stnl
     {
         for (auto& timer : expirationTimers) {
             // 该定时器为周期性定时器，修改过期时间，重新添加到 timers_ 中
-            if (timer->repeat()) {
+            Timer* t = timer.get();
+            if (timer->repeat() && cancelingTimers_.find(t) == cancelingTimers_.end()) {
                 timer->restart(when);
-                insert(timer);
+                insert(std::move(timer));
             }
             else {
                 // delete expired timer
@@ -114,7 +155,7 @@ namespace stnl
         readTimerfd(timerfd_);
 
         /**
-         * TODO: 定时器到期，需要依次做哪些事情？
+         * 定时器到期，需要依次做哪些事情？
          * 1. 获取超时的所有定时器
          * 2. 执行超时的所有定时器对应的回调函数
          * 3. 重新设置下一个定时器的超时时间 nextExpiration
@@ -123,23 +164,23 @@ namespace stnl
 
         TimerVector expirationTimers = getAllExpirationTimer(now_time);
 
+        callingExpiredTimers_ = true;
+        cancelingTimers_.clear();
         for (const auto& iter : expirationTimers) {
             iter->run();
         }
+        callingExpiredTimers_ = false;
 
         resetExpirationTimers(expirationTimers, now_time);
     }
 
-    void TimerQueue::insert(TimerCallback& cb, Timestamp& when, Seconds& interval)
+    TimerId TimerQueue::insert(TimerCallback cb, Timestamp& when, Seconds interval)
     {
         // 在IO线程中执行
-        std::unique_ptr<Timer> timer = std::make_unique<Timer>(cb, when, interval);
-        TimerId id = timer->id();
-
-        // FIXME: error. timer will be destruct!!!
-        // NOTE: must be std::move(std::bind(...))
-        loop_->runInLoop(std::move(std::bind(&TimerQueue::insertInLoop, this, std::move(timer))));
-        
+        Timer* timer = new Timer(cb, when, interval);
+        TimerId id(timer->id(), timer);
+        loop_->runInLoop(std::bind(&TimerQueue::insertInLoop, this, timer));
+        return id;
     }
 
     void TimerQueue::resetTimerfd(Timestamp expiration)
@@ -154,27 +195,31 @@ namespace stnl
         }
     }
 
-    void TimerQueue::insertInLoop(std::unique_ptr<Timer> timer)
+    void TimerQueue::insertInLoop(Timer* timer)
     {
         loop_->assertInLoopThread();
 
-        // std::unique_ptr<Timer> timer = std::make_unique<Timer>(cb, when, interval);
-        Timestamp when = timer->expiration();
-        // NOTE: 此时timer已经被移动
-        bool earliestTimeout = insert(timer);
+        // 使用 unique_ptr 管理 Timer
+        // FIXME: unique_ptr 离开函数后，销毁，造成悬垂引用
+        std::unique_ptr<Timer> unique_timer(timer);
+        Timestamp when = unique_timer->expiration();
+        
+        bool earliestTimeout = insert(std::move(unique_timer));
         
         if (earliestTimeout) {
             resetTimerfd(when);
         }
     }
 
-    bool TimerQueue::insert(std::unique_ptr<Timer>& timer)
+    bool TimerQueue::insert(std::unique_ptr<Timer> timer)
     {
-        // loop_->assertInLoopThread();
+        loop_->assertInLoopThread();
+        assert(timers_.size() == activeTimers_.size());
         bool earliestTimeout = false;
         Timestamp expiration = timer->expiration();
-        auto iter = timers_.begin();
+        TimerId timerId(timer->id(), timer.get());
 
+        auto iter = timers_.begin();
         // 新添加的定时器的超时时间最小
         if (iter == timers_.end() || expiration < iter->first) {
             earliestTimeout = true;
@@ -183,6 +228,10 @@ namespace stnl
         auto res = timers_.emplace(expiration, std::move(timer));
         assert(res->second);
 
+        auto ret = activeTimers_.emplace(timerId);
+        assert(ret.second);
+
+        assert(timers_.size() == activeTimers_.size());
         return earliestTimeout;
     }
 
