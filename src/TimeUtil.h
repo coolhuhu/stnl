@@ -51,7 +51,7 @@ namespace stnl
 
         decltype(auto) nanosecondFraction()
         {
-            return nanoSecondsSinceEpoch() - mircoSecondsSinceEpoch() * 1000;
+            return nanoSecondsSinceEpoch() - mircoSecondsSinceEpoch() * MillisecondsRatio;
         }
 
         static Timestamp now();
@@ -60,6 +60,11 @@ namespace stnl
         {
             return Timestamp();
         }
+
+    public:
+        static const int MillisecondsRatio = 1000;
+        static const int MicrosecondsRatio = 1000000;
+        static const int NanosecondsRatio = 1000000000;
     
     private:
         std::chrono::nanoseconds nanoSecondsSinceEpoch_;
@@ -79,7 +84,7 @@ namespace stnl
 
     inline Timestamp addTime(Timestamp timestamp, double seconds)
     {
-        int64_t delta = static_cast<int64_t>(seconds * 1000000000);
+        int64_t delta = static_cast<int64_t>(seconds * Timestamp::NanosecondsRatio);
         return Timestamp(timestamp.nanoSecondsSinceEpoch() + delta);
     }
 

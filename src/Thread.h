@@ -36,8 +36,12 @@ public:
         assert(!running_);
         assert(!thread_.joinable());
         running_ = true;
-        thread_ = std::thread(func_);
-
+        thread_ = std::move(std::thread(&Thread::threadFuncWarper, this, std::move(func_)));
+        
+        {
+            std::unique_lock<std::mutex> locker(mutex_);
+            cv_.wait(locker);
+        }
     }
 
     void join()
@@ -49,6 +53,12 @@ public:
         }
     }
 
+    bool joinable() const { return thread_.joinable(); }
+
+    const std::string& name() { return threadName_; }
+
+    const std::thread::id tid() const { return tid_; }
+
 private:
     void threadFuncWarper(ThreadFunction func);
 
@@ -56,9 +66,10 @@ private:
     bool running_;
     std::string threadName_;
     ThreadFunction func_;
-    std::thread thread_;
     std::mutex mutex_;
     std::condition_variable_any cv_;
+    std::thread thread_;
+    std::thread::id tid_;
 };
 
 }

@@ -91,7 +91,7 @@ namespace stnl
             loop_->removeChannel(this);
         }
 
-        int events() const { return returnedEvents_; }
+        int events() const { return requestedEvents_; }
 
         // 例如：当epoll_wait返回时，通过调用channel的void setReturnedEvent(int type)该方法来设置产生的事件类型
         void setReturnedEvent(int type) { returnedEvents_ = type; }

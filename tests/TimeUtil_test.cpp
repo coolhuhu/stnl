@@ -25,15 +25,24 @@ void test_Timestamp()
 
 void test_intervalFromNow()
 {
-    auto time = Timestamp::now().nanoSecondsSinceEpoch();
-    Timestamp futureTime(time + 6000000000);    // 未来5s
-    struct timespec interval = intervalFromNow(futureTime);
-    std::cout << "interval " << interval.tv_sec << " seconds, "
-              << interval.tv_nsec << " nanoseconds" << std::endl;
+    auto chrono_curr_time = std::chrono::system_clock::now().time_since_epoch().count();
+    std::cout << "chrono_curr_time: " << chrono_curr_time << std::endl;
+    Timestamp curr_time = Timestamp::now();
+    std::cout << "curr_time: " << curr_time.nanoSecondsSinceEpoch() << std::endl;
+    Timestamp future_time = addTime(curr_time, 5);
+    std::cout << "future_time: " << future_time.nanoSecondsSinceEpoch() << std::endl;
+
+    std::cout << "future_time - curr_time = " 
+              << future_time.nanoSecondsSinceEpoch() - curr_time.nanoSecondsSinceEpoch() << std::endl;
+
+    timespec interval = intervalFromNow(future_time);
+    std::cout << "iterval: " << interval.tv_sec << " seconds, " 
+              << interval.tv_nsec << "nanoseconds" << std::endl;
 }
 
 int main()
 {
     test_Timestamp();
+    std::cout << "---------------------------" << std::endl;
     test_intervalFromNow();
 }

@@ -78,7 +78,7 @@ namespace stnl
 
         ~Timer() { --timerCount_; }
 
-        const int64_t id() const { return id_.id(); }
+        const TimerId id() const { return id_; }
 
         void run()
         {

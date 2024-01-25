@@ -120,7 +120,7 @@ namespace stnl
 
             // 1. epoll_wait(), 获取有事件发生的events
             selector_->select(activeChannels, Epoll::EPOLL_TIMEOUT);
-            LOG_INFO << "select()";
+            // LOG_INFO << "select()";
 
             // 2. 执行 events 上注册的回调函数
             for (auto channel : activeChannels)
@@ -128,7 +128,7 @@ namespace stnl
                 channel->handleEvents();
             }
 
-            LOG_INFO << "doPendingFunctions()";
+            // LOG_INFO << "doPendingFunctions()";
             doPendingFunctions();
         }
 

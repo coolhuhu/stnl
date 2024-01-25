@@ -24,3 +24,6 @@ target_link_libraries(TimeUtil_test ${STNL} pthread)
 
 add_executable(Timer_test Timer_test.cpp)
 target_link_libraries(Timer_test ${STNL} pthread)
+
+add_executable(Thread_test Thread_test.cpp)
+target_link_libraries(Thread_test ${STNL} pthread)

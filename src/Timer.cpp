@@ -1,4 +1,5 @@
 #include "Timer.h"
+#include "logger.h"
 
 #include <unistd.h>
 #include <sys/timerfd.h>
@@ -112,7 +113,7 @@ namespace stnl
         // 从timers_和activeTimers中移除过期的定时器
         timers_.erase(timers_.begin(), iter);
         for (auto& timer: expirationTimers) {
-            TimerId timerId(timer->id(), timer.get());
+            TimerId timerId(timer->id());
             auto iter = activeTimers_.find(timerId);
             if (iter != activeTimers_.end()) {
                 activeTimers_.erase(timerId);
@@ -163,7 +164,7 @@ namespace stnl
         */
 
         TimerVector expirationTimers = getAllExpirationTimer(now_time);
-
+        LOG_INFO << "expirationTimers.size() = " << expirationTimers.size();
         callingExpiredTimers_ = true;
         cancelingTimers_.clear();
         for (const auto& iter : expirationTimers) {
@@ -178,7 +179,7 @@ namespace stnl
     {
         // 在IO线程中执行
         Timer* timer = new Timer(cb, when, interval);
-        TimerId id(timer->id(), timer);
+        TimerId id(timer->id());
         loop_->runInLoop(std::bind(&TimerQueue::insertInLoop, this, timer));
         return id;
     }
@@ -217,7 +218,7 @@ namespace stnl
         assert(timers_.size() == activeTimers_.size());
         bool earliestTimeout = false;
         Timestamp expiration = timer->expiration();
-        TimerId timerId(timer->id(), timer.get());
+        TimerId timerId(timer->id());
 
         auto iter = timers_.begin();
         // 新添加的定时器的超时时间最小
