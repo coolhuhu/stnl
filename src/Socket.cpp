@@ -11,7 +11,7 @@ using namespace stnl;
 
 /* -------------------------------------- SocketUtil ------------------------------------------------*/
 
-void SocketUtil::bindAddress(int socketFd, struct sockaddr *addr)
+void SocketUtil::bindAddress(int socketFd, const struct sockaddr *addr)
 {
     int res = ::bind(socketFd, addr, sizeof(struct sockaddr_in6));
     if (res < 0)
@@ -127,6 +127,31 @@ void SocketUtil::setKeepAlive(int socketFd, bool on)
     }
 }
 
+SockAddr SocketUtil::getLocalAddr(int socketFd)
+{
+    // FIXME: 修改为 struct sockaddr_storage 处理 ipv4 和 ipv6
+    // NOTE: 目前只能处理 ipv4
+    struct sockaddr_in localAddr;
+    bzero(&localAddr, sizeof(localAddr));
+    socklen_t addrLen = static_cast<socklen_t>(sizeof(localAddr));
+    if (::getsockname(socketFd, reinterpret_cast<struct sockaddr*>(&localAddr), &addrLen) < 0) {
+        // FIXME: error handle
+    }
+    return SockAddr(localAddr);
+}
+
+int SocketUtil::getSocketError(int socketFd)
+{
+    int optval;
+    socklen_t optlen = static_cast<socklen_t>(sizeof(optval));
+    if (::getsockopt(socketFd, SOL_SOCKET, SO_ERROR, &optval, &optlen) < 0) {
+        return errno;
+    }
+    else {
+        return optval;
+    }
+}
+
 /* ----------------------------------------- SockAddr ----------------------------------------*/
 
 SockAddr::SockAddr(std::string_view ip_str, uint16_t port, bool ipv6) : ipv6_(ipv6)
@@ -186,29 +211,29 @@ std::uint16_t SockAddr::port()
     return port;
 }
 
-// const struct sockaddr *SockAddr::getSockAddr() const
-// {
-//     if (ipv6_)
-//     {
-//         return static_cast<const struct sockaddr*>(static_cast<const void*>(&addr6_));
-//     }
-//     else
-//     {
-//         return static_cast<const struct sockaddr*>(static_cast<const void*>(&addr_));
-//     }
-// }
-
-struct sockaddr *SockAddr::getSockAddr()
+const struct sockaddr *SockAddr::getSockAddr() const
 {
     if (ipv6_)
     {
-        return static_cast<struct sockaddr*>(static_cast<void*>(&addr6_));
+        return static_cast<const struct sockaddr*>(static_cast<const void*>(&addr6_));
     }
     else
     {
-        return static_cast<struct sockaddr*>(static_cast<void*>(&addr_));
+        return static_cast<const struct sockaddr*>(static_cast<const void*>(&addr_));
     }
 }
+
+// struct sockaddr *SockAddr::getSockAddr()
+// {
+//     if (ipv6_)
+//     {
+//         return static_cast<struct sockaddr*>(static_cast<void*>(&addr6_));
+//     }
+//     else
+//     {
+//         return static_cast<struct sockaddr*>(static_cast<void*>(&addr_));
+//     }
+// }
 
 void SockAddr::setSockAddr6(const sockaddr_in6 addr6)
 {
@@ -236,7 +261,7 @@ sa_family_t stnl::SockAddr::family() const
 
 /* --------------------------------------- Socket ------------------------------------- */
 
-void Socket::bindAddress(SockAddr &sockaddr)
+void Socket::bindAddress(const SockAddr& sockaddr)
 {
     SocketUtil::bindAddress(socketFd_, sockaddr.getSockAddr());
 }

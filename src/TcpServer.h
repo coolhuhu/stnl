@@ -6,6 +6,7 @@
 #include "Socket.h"
 #include "Channel.h"
 #include "EventLoopThreadPool.h"
+#include "TcpConnection.h"
 #include <memory>
 #include <map>
 
@@ -13,6 +14,8 @@ namespace stnl
 {
 
     class TcpConnection;
+    class NetBuffer;
+    class Timestamp;
 
     /**
      * 对服务端的监听socket的相关操作进行封装。
@@ -20,7 +23,7 @@ namespace stnl
     class Acceptor : public noncopyable
     {
     public:
-        using NewConnectionCallback = std::function<void(int socketFd, const SockAddr&)>;
+        using NewConnectionCallback = std::function<void(int socketFd, SockAddr)>;
 
         Acceptor(EventLoop* loop, const SockAddr& addr);
 
@@ -65,12 +68,21 @@ namespace stnl
     class TcpServer : public noncopyable
     {
     public:
+        using TcpConnectionPtr = std::shared_ptr<TcpConnection>;
+        using ConnectionMap = std::map<std::string, TcpConnectionPtr>;
+
         TcpServer(const SockAddr& listenAddr, 
-                  std::string_view loopName="Tcp-Main-Reactor",
+                  std::string_view name="Tcp-Server",
                   int threadNums=0);
 
         ~TcpServer();
-    
+
+        void setConnectionCallback(const TcpConnection::ConnectionCallback& cb) { connectionCallback_ = cb; }
+        void setMessageCallback(const TcpConnection::MessageCallback& cb) { messageCallback_ = cb; }
+        void setWriteCompletionCallback(const TcpConnection::WriteCompletionCallback& cb) { writeCompletionCallback_ = cb; }
+
+        void start();
+
     private:
         /**
          * 新连接到来时的回调函数，传入Acceptor中，acceptor_->setNewConnectionCallback();
@@ -78,20 +90,21 @@ namespace stnl
          * @param socketFd 对端文件描述符
          * @param peerAddr 对端SockAddr
          */
-        void newConnectionCallback(int socketFd, const SockAddr& peerAddr);
+        void newConnectionCallback(int socketFd, SockAddr peerAddr);
+
+        void removeConnection(const TcpConnectionPtr& conn);
+        void removeConnectionInLoop(const TcpConnectionPtr& conn);
 
 
     private:
-        using TcpConnectionPtr = std::shared_ptr<TcpConnection>;
-        using ConnectionMap = std::map<std::string, TcpConnectionPtr>;
-        using ConnectionCallback = std::function<void()>;
-
         std::unique_ptr<EventLoop> loop_;
         std::unique_ptr<EventLoopThreadPool> threadPool_;
-        ConnectionMap connections_;
         std::unique_ptr<Acceptor> acceptor_;
-
-        ConnectionCallback connectionCallback_;
+        ConnectionMap connections_;
+        std::string name_;
+        TcpConnection::ConnectionCallback connectionCallback_;
+        TcpConnection::MessageCallback messageCallback_;
+        TcpConnection::WriteCompletionCallback writeCompletionCallback_;
     };
 
 }

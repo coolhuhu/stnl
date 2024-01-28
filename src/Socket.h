@@ -16,7 +16,7 @@ namespace stnl
     class SocketUtil
     {
     public:
-        static void bindAddress(int socketFd, struct sockaddr* addr);
+        static void bindAddress(int socketFd, const struct sockaddr* addr);
 
         static void listenSocket(int socketFd);
 
@@ -40,6 +40,10 @@ namespace stnl
 
         static void setKeepAlive(int socketFd, bool on);
 
+        static SockAddr getLocalAddr(int socketFd);
+
+        static int getSocketError(int socketFd);
+
     };
 
     class SockAddr
@@ -61,7 +65,8 @@ namespace stnl
 
         bool is_ipv6() const { return ipv6_; }
 
-        struct sockaddr* getSockAddr();
+        // struct sockaddr* getSockAddr();
+        const struct sockaddr* getSockAddr() const;
 
         void setSockAddr6(const struct sockaddr_in6);
 
@@ -93,7 +98,7 @@ namespace stnl
 
         int fd() const { return socketFd_; }
 
-        void bindAddress(SockAddr& sockaddr);
+        void bindAddress(const SockAddr& sockaddr);
 
         void listen();
 

@@ -30,11 +30,15 @@ namespace stnl
         using MessageCallback = std::function<void(const TcpConnectionPtr& conn, NetBuffer* buffer)>;
         using ConnectionCallback = std::function<void(const TcpConnectionPtr& conn)>;
         using CloseCallback = std::function<void(const TcpConnectionPtr& conn)>;
+        using WriteCompletionCallback = std::function<void(const TcpConnectionPtr& conn)>;
+
 
     public:
-        TcpConnection();
+        TcpConnection(EventLoop* loop, int sockfd, const SockAddr& localAddr, const SockAddr& peerAddr);
 
         ~TcpConnection();
+
+        EventLoop* getLoop() const { return loop_; }
 
         void setConnectionCallback(const ConnectionCallback& cb) { connectionCallback_ = cb; }
 
@@ -42,25 +46,34 @@ namespace stnl
 
         void setCloseCallback(const CloseCallback& cb) { closeCallback_ = cb; }
 
+        void setWriteCompleteCallback(const WriteCompletionCallback& cb) { writeCompletionCallback_ = cb; }
+
         /**
          * 当有新连接到来时调用该函数，并将socket上的读事件注册到epoll中
         */
         void connectionEstablish();
         
-        /**
-         * 
-        */
         void connectionDestory();
+
+        void shutdown();
 
         void setSocketState(SocketState state) { socketState_ = state; }
 
-        void send(const char* message, int len);
+        // FIXME: 使用 std::string, std::move()
+        void send(const char* message, std::size_t len);
         void send(std::string_view message);
 
-        void enableRead();
-        void disableRead();
+        // void enableRead();
+        // void disableRead();
 
         void setTcpNoDelay(bool on);
+
+        const SockAddr& getLocalAddr() const { return localAddr_; }
+
+        const SockAddr& getPeerAddr() const { return peerAddr_; }
+
+        bool isConnected() const { return socketState_ == SocketState::CONNECTED; }
+        bool isDisconnected() const { return socketState_ == SocketState::DISCONNECTED; }
 
 
     private:
@@ -70,13 +83,18 @@ namespace stnl
         void handleClose();
         void handleError();
 
+        void sendInLoop(const char* message, std::size_t len);
+        void sendInLoop(const std::string message);
+
+        void shutdownInLoop();
+
 
     private:
         EventLoop* loop_;
-        std::unique_ptr<Channel> channel_;
         std::unique_ptr<Socket> socket_;
-        SockAddr localAddr;
-        SockAddr peerAddr;
+        std::unique_ptr<Channel> channel_;
+        SockAddr localAddr_;
+        SockAddr peerAddr_;
         NetBuffer inputBuffer_;
         NetBuffer outputBuffer_;
         SocketState socketState_;
@@ -84,6 +102,7 @@ namespace stnl
         ConnectionCallback connectionCallback_;
         MessageCallback messageCallback_;
         CloseCallback closeCallback_;
+        WriteCompletionCallback writeCompletionCallback_;
     };
 
 }
