@@ -104,6 +104,13 @@ namespace stnl
 
     void Epoll::removeChannel(Channel *channel)
     {
+        int fd = channel->fd();
+        Channel::EventState currentEventState = channel->getEventState();
+        channelMap_.erase(fd);
+        if (currentEventState == Channel::EventState::ADDED) {
+            update(channel, EPOLL_CTL_DEL);
+        }
+        channel->setEventState(Channel::EventState::NEW);
     }
 
     void Epoll::update(Channel *channel, int operation)

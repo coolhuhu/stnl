@@ -39,7 +39,6 @@ namespace stnl
         virtual void removeChannel(Channel*) = 0;
 
     protected:
-        // key为文件描述符, value为 EventManager管理的文件描述符
         using ChannelMap = std::map<int, Channel*>;
         ChannelMap channelMap_;
 

@@ -46,36 +46,24 @@ namespace stnl
 
         void enableRead()
         {
-            // TODO: 设置 watchedEvent_
-            // watchedEvent_ |= 
-            // 将 fd_ 上关注事件的更新更新到 Selector 中
             requestedEvents_ |= kReadEvent;
             update();
         }
 
         void disableRead()
         {
-            // TODO: 设置 watchedEvent_
-            // watchedEvent_ |= 
-            // 将 fd_ 上关注事件的更新更新到 Selector 中
             requestedEvents_ &= ~kReadEvent;
             update();
         }
 
         void enableWrite()
         {
-            // TODO: 设置 watchedEvent_
-            // watchedEvent_ |= 
-            // 将 fd_ 上关注事件的更新更新到 Selector 中
             requestedEvents_ |= kWriteEvent;
             update();
         }
 
         void disableWrite()
         {
-            // TODO: 设置 watchedEvent_
-            // watchedEvent_ |= 
-            // 将 fd_ 上关注事件的更新更新到 Selector 中
             requestedEvents_ &= ~kWriteEvent;
             update();
         }

@@ -171,7 +171,7 @@ namespace stnl
 
         if (!isInLoopThread() || callingPendingFunctions_)
         {
-            LOG_INFO << "wakeup()";
+            // LOG_INFO << "wakeup()";
             wakeup();
         }
     }
