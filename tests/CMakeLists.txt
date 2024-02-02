@@ -27,3 +27,6 @@ target_link_libraries(Timer_test ${STNL} pthread)
 
 add_executable(Thread_test Thread_test.cpp)
 target_link_libraries(Thread_test ${STNL} pthread)
+
+add_executable(TcpServer_test TcpServer_test.cpp)
+target_link_libraries(TcpServer_test ${STNL} pthread)

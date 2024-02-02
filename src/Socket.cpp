@@ -84,6 +84,7 @@ void SocketUtil::shutdownWrite(int socketFd)
     if (::shutdown(socketFd, SHUT_WR) < 0)
     {
         // FIXME:
+        LOG_ERROR << "shutdown write error.";
     }
 }
 
