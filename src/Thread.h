@@ -23,6 +23,8 @@ public:
 
     Thread(std::string_view threadName, ThreadFunction func) : threadName_(threadName), func_(func), running_(false) {}
 
+    // TODO: make moveable
+
     ~Thread()
     {
         if (running_ && thread_.joinable())
