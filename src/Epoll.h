@@ -16,7 +16,7 @@ namespace stnl
 
         ~Epoll() override;
 
-        void select(ChannelVector& activeChannels, int timeout) override;
+        Timestamp select(ChannelVector& activeChannels, int timeout) override;
 
         void updateChannel(Channel* channel) override;
 

@@ -1,5 +1,3 @@
-
-
 #ifndef STNL_SOCKET_H
 #define STNL_SOCKET_H
 
@@ -42,8 +40,11 @@ namespace stnl
 
         static SockAddr getLocalAddr(int socketFd);
 
+        static SockAddr getPeerAddr(int socketFd);
+
         static int getSocketError(int socketFd);
 
+        static bool isSelfConnect(int socketFd);
     };
 
     class SockAddr
@@ -56,6 +57,15 @@ namespace stnl
         explicit SockAddr(const struct sockaddr_in& addr): addr_(addr), ipv6_(false) {}
 
         explicit SockAddr(const struct sockaddr_in6& addr6): addr6_(addr6), ipv6_(true) {}
+
+        SockAddr(const SockAddr& sockAddr) {
+            ipv6_ = sockAddr.ipv6_;
+            if (ipv6_) {
+                addr6_ = sockAddr.addr6_;
+            } else {
+                addr_ = sockAddr.addr_;
+            }
+        }
 
         ~SockAddr() = default;
 

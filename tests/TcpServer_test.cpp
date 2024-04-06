@@ -1,7 +1,9 @@
 #include "../src/TcpServer.h"
 #include "../src/logger.h"
+#include "../src/TimeUtil.h"
 #include <memory>
 #include <iostream>
+
 
 using namespace std::placeholders;
 
@@ -13,13 +15,13 @@ public:
     EchoServer(const SockAddr& listenSockAddr): server_(listenSockAddr, "Echo-Server")
     {
         server_.setConnectionCallback(std::bind(&EchoServer::onConnection, this, _1));
-        server_.setMessageCallback(std::bind(&EchoServer::onMessage, this, _1, _2));
+        server_.setMessageCallback(std::bind(&EchoServer::onMessage, this, _1, _2, _3));
     }
 
     void start() { server_.start(); }
 
 private:
-    void onMessage(const TcpConnection::TcpConnectionPtr& conn, NetBuffer* buf)
+    void onMessage(const TcpConnection::TcpConnectionPtr& conn, NetBuffer* buf, Timestamp receiveTime)
     {
         std::string msg(buf->retrieveAllAsString());
         LOG_INFO << "recv data: " << msg;

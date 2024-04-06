@@ -24,7 +24,7 @@ namespace stnl
         };
 
         using WriteEventCallback = std::function<void()>;
-        using ReadEventCallback = std::function<void()>;
+        using ReadEventCallback = std::function<void(Timestamp)>;
         using ErrorEventCallback = std::function<void()>;
         using CloseEventCallback = std::function<void()>;
 
@@ -42,7 +42,7 @@ namespace stnl
         /**
          * 处理 fd_ 上已发生的事件。
          */
-        void handleEvents();
+        void handleEvents(Timestamp);
 
         void enableRead()
         {

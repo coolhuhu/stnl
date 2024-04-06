@@ -1,6 +1,4 @@
 #include <thread>
-#include <boost/timer/timer.hpp>
-
 #include "../src/logger.h"
 
 using namespace stnl;
@@ -68,7 +66,6 @@ void test_AsyncLogging()
     };
 
     {
-        boost::timer::auto_cpu_timer t;
 
         std::thread thread1(threadFunc);
         std::thread thread2(threadFunc);

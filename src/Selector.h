@@ -12,6 +12,7 @@ namespace stnl
 
     class EventLoop;
     class Channel;
+    class Timestamp;
 
     /**
      * 抽象基类，为poll和epoll提供相同的接口。
@@ -29,7 +30,7 @@ namespace stnl
         /**
          * TODO: 修改timeout的类型,使其更合理
         */
-        virtual void select(ChannelVector& activeChannels, int timeout) = 0;
+        virtual Timestamp select(ChannelVector& activeChannels, int timeout) = 0;
 
         virtual void updateChannel(Channel*) = 0;
 

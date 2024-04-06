@@ -39,6 +39,7 @@ make 4.2.1
 ## 庖丁解牛
 - [one-loop-per-thread核心原理](./docs/one-loop-per-thread核心原理.md)
 - [源码分析之Channel、EventLoop和Selector](./docs/源码分析之Channel、EventLoop和Selector.md)
+- [源码分析之Thread、EventLoopThread和EventLoopThreadPool](./docs/源码分析之Thread、EventLoopThread和EventLoopThreadPool.md)
 - [定时器](./docs/定时器.md)
 - 更新中...
 

@@ -1,6 +1,7 @@
 #include "Channel.h"
 #include <sys/poll.h>
 #include "EventLoop.h"
+#include "TimeUtil.h"
 
 
 namespace stnl
@@ -22,7 +23,7 @@ namespace stnl
      * 这里对于poll和epoll，大多数的事件类型的宏定义的值是相同的，这里使用了poll中对应的宏定义。
      * TODO: 一种更好的做法是，自定义一个类来封装poll和epoll的底层事件类型，做到对外统一，待实现。
     */
-    void Channel::handleEvents()
+    void Channel::handleEvents(Timestamp receiveTime)
     {
         if (returnedEvents_ & POLLOUT) {
             if (writeEventCallback_) {
@@ -42,7 +43,7 @@ namespace stnl
 
         if (returnedEvents_ & (POLLIN | POLLPRI | POLLRDHUP)) {
             if (readEventCallback_) {
-                readEventCallback_();
+                readEventCallback_(receiveTime);
             }
         }
 

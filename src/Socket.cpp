@@ -141,6 +141,19 @@ SockAddr SocketUtil::getLocalAddr(int socketFd)
     return SockAddr(localAddr);
 }
 
+SockAddr SocketUtil::getPeerAddr(int socketFd)
+{
+    // FIXME: 修改为 struct sockaddr_storage 处理 ipv4 和 ipv6
+    // NOTE: 目前只能处理 ipv4
+    struct sockaddr_in peerAddr;
+    bzero(&peerAddr, sizeof(peerAddr));
+    socklen_t addrLen = static_cast<socklen_t>(sizeof(peerAddr));
+    if (::getpeername(socketFd, reinterpret_cast<struct sockaddr*>(&peerAddr), &addrLen) < 0) {
+        // FIXME: error handle
+    }
+    return SockAddr(peerAddr);
+}
+
 int SocketUtil::getSocketError(int socketFd)
 {
     int optval;
@@ -151,6 +164,12 @@ int SocketUtil::getSocketError(int socketFd)
     else {
         return optval;
     }
+}
+
+/* TODO: 待实现 */
+bool stnl::SocketUtil::isSelfConnect(int socketFd)
+{
+    return false;
 }
 
 /* ----------------------------------------- SockAddr ----------------------------------------*/

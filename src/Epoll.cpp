@@ -6,6 +6,7 @@
 #include <cassert>
 #include <cstring>
 #include "logger.h"
+#include "TimeUtil.h"
 
 namespace stnl
 {
@@ -32,10 +33,13 @@ namespace stnl
         ::close(epollFd_);
     }
 
-    void Epoll::select(ChannelVector& activeChannels, int timeout)
+    Timestamp Epoll::select(ChannelVector& activeChannels, int timeout)
     {
         int returnedEventsNum = epoll_wait(epollFd_, events_.data(), static_cast<int>(events_.size()), timeout);
         LOG_DEBUG << "epoll_wait once...";
+
+        Timestamp now(Timestamp::now());
+
         if (returnedEventsNum < 0) {
             // FIXME: error
         }
@@ -66,6 +70,8 @@ namespace stnl
                 events_.resize(events_.size() * 2);
             }
         }
+
+        return now;
     }
 
     /**

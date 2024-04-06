@@ -38,6 +38,15 @@ void test_invalid_SockAddr_2()
     std::cout << "port: " << sockaddr.port() << std::endl;
 }
 
+void test_connectSocket()
+{
+    SockAddr serverAddr("127.0.0.1", 8888);
+    int socketFd = SocketUtil::createNonblockSocket(serverAddr.family());
+    int ret = SocketUtil::connectSocket(socketFd, serverAddr.getSockAddr());
+    int savedErrno = (ret == 0) ? 0 : errno;
+    std::cout << "saveErrno = " << savedErrno << std::endl;
+}
+
 
 int main()
 {
@@ -47,4 +56,7 @@ int main()
     test_valid_SockAddr();
     test_invalid_SockAddr_1();
     test_invalid_SockAddr_2();
+    std::cout << "\n";
+
+    test_connectSocket();
 }

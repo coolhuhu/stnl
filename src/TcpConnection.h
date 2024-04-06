@@ -27,7 +27,7 @@ namespace stnl
             DISCONNECTING
         };
         using TcpConnectionPtr = std::shared_ptr<TcpConnection>;
-        using MessageCallback = std::function<void(const TcpConnectionPtr& conn, NetBuffer* buffer)>;
+        using MessageCallback = std::function<void(const TcpConnectionPtr& conn, NetBuffer* buffer, Timestamp timestamp)>;
         using ConnectionCallback = std::function<void(const TcpConnectionPtr& conn)>;
         using CloseCallback = std::function<void(const TcpConnectionPtr& conn)>;
         using WriteCompletionCallback = std::function<void(const TcpConnectionPtr& conn)>;
@@ -57,6 +57,8 @@ namespace stnl
 
         void shutdown();
 
+        void forceClose();
+
         void setSocketState(SocketState state) { socketState_ = state; }
 
         // FIXME: 使用 std::string, std::move()
@@ -68,9 +70,9 @@ namespace stnl
 
         void setTcpNoDelay(bool on);
 
-        const SockAddr& getLocalAddr() const { return localAddr_; }
+        SockAddr& getLocalAddr()  { return localAddr_; }
 
-        const SockAddr& getPeerAddr() const { return peerAddr_; }
+        SockAddr& getPeerAddr()  { return peerAddr_; }
 
         bool isConnected() const { return socketState_ == SocketState::CONNECTED; }
         bool isDisconnected() const { return socketState_ == SocketState::DISCONNECTED; }
@@ -78,7 +80,7 @@ namespace stnl
 
     private:
         // 处理已连接socket上的读、写、关闭和异常
-        void handleRead();
+        void handleRead(Timestamp);
         void handleWrite();
         void handleClose();
         void handleError();
@@ -88,6 +90,7 @@ namespace stnl
 
         void shutdownInLoop();
 
+        void forceCloseInLoop();
 
     private:
         EventLoop* loop_;
@@ -104,7 +107,8 @@ namespace stnl
         CloseCallback closeCallback_;
         WriteCompletionCallback writeCompletionCallback_;
     };
-
+    
+    
 }
 
 #endif

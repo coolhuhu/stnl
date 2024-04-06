@@ -2,21 +2,23 @@
 #include "logger.h"
 #include <limits.h>
 #include <unistd.h>
-
+#include "TimeUtil.h"
 
 using namespace stnl;
+using namespace std::placeholders;
 
-TcpConnection::TcpConnection(EventLoop* loop, int sockfd, 
-                             const SockAddr& localAddr, 
-                             const SockAddr& peerAddr)
-                            : loop_(loop),
-                              socket_(new Socket(sockfd)),
-                              channel_(new Channel(loop, sockfd)),
-                              localAddr_(localAddr),
-                              peerAddr_(peerAddr),
-                              socketState_(SocketState::CONNECTING)
+
+TcpConnection::TcpConnection(EventLoop *loop, int sockfd,
+                             const SockAddr &localAddr,
+                             const SockAddr &peerAddr)
+    : loop_(loop),
+      socket_(new Socket(sockfd)),
+      channel_(new Channel(loop, sockfd)),
+      localAddr_(localAddr),
+      peerAddr_(peerAddr),
+      socketState_(SocketState::CONNECTING)
 {
-    channel_->setReadEventCallback(std::bind(&TcpConnection::handleRead, this));
+    channel_->setReadEventCallback(std::bind(&TcpConnection::handleRead, this, _1));
     channel_->setCloseEventCallback(std::bind(&TcpConnection::handleClose, this));
     channel_->setWriteEventCallback(std::bind(&TcpConnection::handleWrite, this));
     channel_->setErrorEventCallback(std::bind(&TcpConnection::handleError, this));
@@ -25,7 +27,6 @@ TcpConnection::TcpConnection(EventLoop* loop, int sockfd,
 
 TcpConnection::~TcpConnection()
 {
-
 }
 
 void TcpConnection::connectionEstablish()
@@ -88,7 +89,7 @@ void TcpConnection::sendInLoop(const char *message, std::size_t len)
         /**
          * outputBuffer_中没有数据，说明上一次一次性把outputBuffer_中的数据发送了出去。
          * 直接调用 write 发送数据，尝试一次性把数据发送出去。
-        */
+         */
         written = ::write(channel_->fd(), message, len);
         if (written >= 0)
         {
@@ -100,7 +101,7 @@ void TcpConnection::sendInLoop(const char *message, std::size_t len)
                 writeCompletionCallback_(shared_from_this());
             }
         }
-        else  // written < 0, error
+        else // written < 0, error
         {
             written = 0;
             // FIXME: error handle
@@ -114,7 +115,8 @@ void TcpConnection::sendInLoop(const char *message, std::size_t len)
         // 一次 write 调用不能把数据全部发完，把未发出去的数据拷贝到 outputBuffer_ 中。
         // 思考：可能是什么原因导致了一次 write 调用未能把数据全部发送出去。
         outputBuffer_.append(message + written, remaining);
-        if (!channel_->writeable()) {
+        if (!channel_->writeable())
+        {
             channel_->enableWrite();
         }
     }
@@ -130,7 +132,7 @@ void TcpConnection::setTcpNoDelay(bool on)
     socket_->setTcpNoDelay(on);
 }
 
-void TcpConnection::handleRead()
+void TcpConnection::handleRead(Timestamp receiveTime)
 {
     int savedErrno = 0;
     ssize_t n = inputBuffer_.readFD(channel_->fd(), &savedErrno);
@@ -138,7 +140,7 @@ void TcpConnection::handleRead()
     {
         if (messageCallback_)
         {
-            messageCallback_(shared_from_this(), &inputBuffer_);
+            messageCallback_(shared_from_this(), &inputBuffer_, receiveTime);
         }
     }
     else if (n == 0)
@@ -170,16 +172,19 @@ void TcpConnection::handleWrite()
              * TODO: else, 一次write未能将outputBuffer_中的数据全部写入文件描述符中的缓冲区
              */
 
-            if (socketState_ == SocketState::DISCONNECTING) {
+            if (socketState_ == SocketState::DISCONNECTING)
+            {
                 // NOTE:
                 shutdownInLoop();
             }
         }
-        else {
+        else
+        {
             // logger: handleWrite eror
         }
     }
-    else {
+    else
+    {
         // TODO:
     }
 }
@@ -194,7 +199,7 @@ void TcpConnection::handleClose()
      * TcpConnection由shared_ptr管理生命周期。
      * 这里创建一个临时变量，让TcpConnectionPtr的引用计数+1，
      * 延长期生命周期，保证closeCallback_能够被安全地执行完毕。
-    */
+     */
     TcpConnectionPtr guardThis(shared_from_this());
     // connectionCallback_(guardThis);
     // closeCallback_ --> TcpConnection::connectionDestory()
@@ -205,23 +210,42 @@ void TcpConnection::handleError()
 {
     // 如何处理异常
     int error = SocketUtil::getSocketError(channel_->fd());
-    LOG_ERROR << "TcpConnection::handleError [" << peerAddr_.ip_str() 
-        << ":" << peerAddr_.port()
-        << "] - SO_ERROR = " << error << " " << strerror(error);
+    LOG_ERROR << "TcpConnection::handleError [" << peerAddr_.ip_str()
+              << ":" << peerAddr_.port()
+              << "] - SO_ERROR = " << error << " " << strerror(error);
 }
 
 void TcpConnection::shutdown()
 {
-    if (socketState_ == SocketState::CONNECTED) {
+    if (socketState_ == SocketState::CONNECTED)
+    {
         socketState_ = SocketState::DISCONNECTING;
         loop_->runInLoop(std::bind(&TcpConnection::shutdownInLoop, this));
+    }
+}
+
+void TcpConnection::forceClose()
+{
+    if (socketState_ == SocketState::CONNECTED || socketState_ == SocketState::DISCONNECTING) {
+        setSocketState(SocketState::DISCONNECTING);
+        loop_->queueInLoop(std::bind(&TcpConnection::forceCloseInLoop, shared_from_this()));
     }
 }
 
 void TcpConnection::shutdownInLoop()
 {
     assert(loop_->isInLoopThread());
-    if (!channel_->writeable()) {
+    if (!channel_->writeable())
+    {
         socket_->shutdownWrite();
     }
 }
+
+void TcpConnection::forceCloseInLoop()
+{
+    if (socketState_ == SocketState::CONNECTED || socketState_ == SocketState::DISCONNECTING) {
+        handleClose();
+    }
+}
+
+

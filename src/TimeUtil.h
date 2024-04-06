@@ -2,6 +2,7 @@
 #define STNL_TIMEUTIL_H
 
 #include <chrono>
+#include <string>
 
 
 /**
@@ -61,10 +62,12 @@ namespace stnl
             return Timestamp();
         }
 
+        std::string toString() const;
+
     public:
-        static const int MillisecondsRatio = 1000;
-        static const int MicrosecondsRatio = 1000000;
-        static const int NanosecondsRatio = 1000000000;
+        static const int MillisecondsRatio;
+        static const int MicrosecondsRatio;
+        static const int NanosecondsRatio;
     
     private:
         std::chrono::nanoseconds nanoSecondsSinceEpoch_;

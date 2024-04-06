@@ -1,5 +1,6 @@
 #include "TcpServer.h"
 #include "TcpConnection.h"
+#include "TimeUtil.h"
 #include <fcntl.h>
 #include <stdio.h>
 #include <cassert>

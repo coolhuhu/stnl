@@ -119,13 +119,13 @@ namespace stnl
             activeChannels.clear();
 
             // 1. epoll_wait(), 获取有事件发生的events
-            selector_->select(activeChannels, Epoll::EPOLL_TIMEOUT);
+            Timestamp selectReturnTime = selector_->select(activeChannels, Epoll::EPOLL_TIMEOUT);
             // LOG_INFO << "select()";
 
             // 2. 执行 events 上注册的回调函数
             for (auto channel : activeChannels)
             {
-                channel->handleEvents();
+                channel->handleEvents(selectReturnTime);
             }
 
             // LOG_INFO << "doPendingFunctions()";
