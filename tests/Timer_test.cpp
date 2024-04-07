@@ -1,4 +1,4 @@
-#include "../src/Timer.h"
+#include "stnl/Timer.h"
 
 #include <iostream>
 #include <string>

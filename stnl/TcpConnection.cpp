@@ -7,7 +7,6 @@
 using namespace stnl;
 using namespace std::placeholders;
 
-
 TcpConnection::TcpConnection(EventLoop *loop, int sockfd,
                              const SockAddr &localAddr,
                              const SockAddr &peerAddr)
@@ -62,7 +61,7 @@ void TcpConnection::send(const char *message, std::size_t len)
         }
         else
         {
-            void (TcpConnection::*fp)(const std::string message) = &TcpConnection::sendInLoop;
+            void (TcpConnection::*fp)(const std::string_view message) = &TcpConnection::sendInLoop;
             loop_->runInLoop(std::bind(fp, this, std::string(message, len)));
         }
     }
@@ -71,6 +70,27 @@ void TcpConnection::send(const char *message, std::size_t len)
 void TcpConnection::send(std::string_view message)
 {
     send(message.data(), message.size());
+}
+
+void TcpConnection::send(NetBuffer *buf)
+{
+    if (socketState_ == SocketState::CONNECTED)
+    {
+        if (loop_->isInLoopThread())
+        {
+            sendInLoop(buf->peek(), buf->readableBytes());
+            buf->retrieveAll();
+        }
+        else
+        {
+            void (TcpConnection::*fp)(const std::string_view message) = &TcpConnection::sendInLoop;
+            loop_->runInLoop(
+                std::bind(fp,
+                          this, 
+                          buf->retrieveAllAsString()));
+            
+        }
+    }
 }
 
 void TcpConnection::sendInLoop(const char *message, std::size_t len)
@@ -122,7 +142,7 @@ void TcpConnection::sendInLoop(const char *message, std::size_t len)
     }
 }
 
-void TcpConnection::sendInLoop(const std::string message)
+void TcpConnection::sendInLoop(const std::string_view message)
 {
     sendInLoop(message.data(), message.size());
 }
@@ -226,7 +246,8 @@ void TcpConnection::shutdown()
 
 void TcpConnection::forceClose()
 {
-    if (socketState_ == SocketState::CONNECTED || socketState_ == SocketState::DISCONNECTING) {
+    if (socketState_ == SocketState::CONNECTED || socketState_ == SocketState::DISCONNECTING)
+    {
         setSocketState(SocketState::DISCONNECTING);
         loop_->queueInLoop(std::bind(&TcpConnection::forceCloseInLoop, shared_from_this()));
     }
@@ -243,9 +264,8 @@ void TcpConnection::shutdownInLoop()
 
 void TcpConnection::forceCloseInLoop()
 {
-    if (socketState_ == SocketState::CONNECTED || socketState_ == SocketState::DISCONNECTING) {
+    if (socketState_ == SocketState::CONNECTED || socketState_ == SocketState::DISCONNECTING)
+    {
         handleClose();
     }
 }
-
-

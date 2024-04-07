@@ -64,6 +64,7 @@ namespace stnl
         // FIXME: 使用 std::string, std::move()
         void send(const char* message, std::size_t len);
         void send(std::string_view message);
+        void send(NetBuffer* buf);
 
         // void enableRead();
         // void disableRead();
@@ -86,7 +87,7 @@ namespace stnl
         void handleError();
 
         void sendInLoop(const char* message, std::size_t len);
-        void sendInLoop(const std::string message);
+        void sendInLoop(const std::string_view message);
 
         void shutdownInLoop();
 

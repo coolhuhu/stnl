@@ -1,6 +1,6 @@
-#include "../src/TcpClient.h"
-#include "../src/logger.h"
-#include "../src/TimeUtil.h"
+#include "stnl/TcpClient.h"
+#include "stnl/logger.h"
+#include "stnl/TimeUtil.h"
 
 using namespace stnl;
 using namespace std::placeholders;

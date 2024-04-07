@@ -1,4 +1,4 @@
-#include "../src/Thread.h"
+#include "stnl/Thread.h"
 #include <iostream>
 
 using namespace stnl;

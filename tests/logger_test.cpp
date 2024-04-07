@@ -1,5 +1,5 @@
 #include <thread>
-#include "../src/logger.h"
+#include "stnl/logger.h"
 
 using namespace stnl;
 

@@ -1,4 +1,4 @@
-#include "../src/EventLoopThread.h"
+#include "stnl/EventLoopThread.h"
 #include <iostream>
 
 using namespace stnl;

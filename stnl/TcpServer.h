@@ -83,6 +83,10 @@ namespace stnl
 
         void start();
 
+        void setThreadNums(int threadNums) {
+            threadPool_->setThreadNums(threadNums);
+        }
+
     private:
         /**
          * 新连接到来时的回调函数，传入Acceptor中，acceptor_->setNewConnectionCallback();

@@ -1,6 +1,6 @@
-#include "../src/TcpServer.h"
-#include "../src/logger.h"
-#include "../src/TimeUtil.h"
+#include "stnl/TcpServer.h"
+#include "stnl/logger.h"
+#include "stnl/TimeUtil.h"
 #include <memory>
 #include <iostream>
 

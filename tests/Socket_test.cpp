@@ -11,8 +11,8 @@
 
 
 #include <iostream>
-#include "../src/Socket.h"
-#include "../src/logger.h"
+#include "stnl/Socket.h"
+#include "stnl/logger.h"
 
 using namespace stnl;
 

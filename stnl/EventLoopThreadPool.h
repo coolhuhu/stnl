@@ -22,6 +22,11 @@ namespace stnl
 
         void start();
 
+        void setThreadNums(int threadNums)
+        {
+            threadNums_ = threadNums;
+        }
+
     private:
         std::string name_;
         EventLoop* mainLoop_;

@@ -1,5 +1,6 @@
-#include "../src/EventLoop.h"
-#include "../src/logger.h"
+#include "stnl/EventLoop.h"
+#include "stnl/logger.h"
+
 #include <iostream>
 
 using namespace stnl;
