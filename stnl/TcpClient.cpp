@@ -76,14 +76,14 @@ TcpClient::~TcpClient()
 
 void TcpClient::connect()
 {
-    // LOG_INFO;
+    LOG_DEBUG << "TcpClient::connect[" << name_ << "] - connecting to " 
+             << connector_->serverAddr().ip_str() << " " << connector_->serverAddr().port();
     connect_ = true;
     connector_->start();
 }
 
 void TcpClient::disconnect()
 {
-    // LOG_INFO;
     connect_ = false;
     {
         std::unique_lock<std::mutex> locker(mutex_);
@@ -105,9 +105,12 @@ void TcpClient::stop()
 void TcpClient::newConnection(int socketFd)
 {
     SockAddr peerAddr(SocketUtil::getPeerAddr(socketFd));
-
     SockAddr localAddr(SocketUtil::getLocalAddr(socketFd));
+    char buf[32];
+    snprintf(buf, sizeof(buf), "%s:%d", peerAddr.ip_str().c_str(), peerAddr.port());
+    std::string connectionName = name_ + buf;
     TcpConnectionPtr conn(new TcpConnection(loop_,
+                                            connectionName,
                                             socketFd,
                                             localAddr,
                                             peerAddr));

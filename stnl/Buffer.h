@@ -107,8 +107,6 @@ namespace stnl
         char *curIndex_;
     };
 
-
-
     /**
      * @brief 来源 muduo 的 Buffer
      *
@@ -240,10 +238,12 @@ namespace stnl
         void retrieve(size_t len)
         {
             assert(len <= readableBytes());
-            if (len < readableBytes()) {
+            if (len < readableBytes())
+            {
                 readIndex_ += len;
             }
-            else {
+            else
+            {
                 retrieveAll();
             }
         }

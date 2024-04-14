@@ -1,3 +1,4 @@
+set(EXECUTABLE_OUTPUT_PATH ${EXEC_PATH})
 
 link_directories(${LIB_PATH})
 

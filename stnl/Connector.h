@@ -43,6 +43,8 @@ namespace stnl
 
         void stop();
 
+        SockAddr serverAddr() const { return serverAddr_; }
+
     private:
         void setState(SocketState s) { state_ = s; }
 

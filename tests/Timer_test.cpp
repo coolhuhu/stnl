@@ -1,11 +1,12 @@
 #include "stnl/Timer.h"
+#include "stnl/logger.h"
 
 #include <iostream>
 #include <string>
 
 using namespace stnl;
 
-EventLoop* g_loop = nullptr;
+EventLoop *g_loop = nullptr;
 
 void print_msg(std::string msg)
 {
@@ -24,9 +25,13 @@ void quitLoop()
     g_loop->quit();
 }
 
-int main()
+
+/**
+ * 测试 Timer 的基本功能
+*/
+void test1()
 {
-    print_msg("start.");
+    print_msg("test1 start.");
 
     {
         EventLoop loop;
@@ -43,7 +48,7 @@ int main()
         }
         TimerId timerId_5 = loop.runEvery(3, std::bind(print_msg, std::string("timeout every 3s")));
         std::cout << timerId_5.id() << std::endl;
-        
+
         loop.runAfter(10, std::bind(print_msg, std::string("timeout once after 10s")));
         loop.runAfter(20, std::bind(cancleTimer, timerId_5));
         loop.runAfter(45, quitLoop);
@@ -51,5 +56,70 @@ int main()
         loop.loop();
     }
 
-    print_msg("loop exit");
+    print_msg("loop exit.\n test1 end.");
+}
+
+
+void test2_func(double time)
+{
+    std::cout << "timeout once after " << time << "s." << std::endl;
+}
+
+
+void test2()
+{
+    print_msg("test2 start.");
+
+    int startTimeMicroseconds = 500;
+    int MaxRetryTimeMicroseconds = 30000; 
+
+    EventLoop loop;
+
+    auto f = [&]() {
+
+        while (1) {
+            TimerId tid = loop.runAfter(startTimeMicroseconds / 1000.0, 
+                                     std::bind(test2_func, startTimeMicroseconds / 1000.0));
+
+            startTimeMicroseconds = std::min(startTimeMicroseconds * 2, MaxRetryTimeMicroseconds);
+            std::cout << "startTimeMicroseconds = " << startTimeMicroseconds << std::endl;
+
+            if (startTimeMicroseconds >= MaxRetryTimeMicroseconds) {
+                break;
+            }
+        }
+    
+        loop.quit();
+    };
+
+    loop.runAfter(3, f);
+
+    loop.loop();
+    
+    print_msg("test2 end.");
+}
+
+
+
+/*
+    测试，当定时器的设置的到期时间小于等于0时，定时器会失效。
+*/
+void test3()
+{
+    EventLoop loop;
+
+    loop.runAfter(-1, [&]() {
+        std::cout << "timeout once after 1s." << std::endl;
+    });
+
+    loop.loop();
+}
+
+
+int main()
+{
+    std::shared_ptr<ConsoleHandler> consoleHandlerPtr = std::make_shared<ConsoleHandler>("pingpong_client", LogLevel::DEBUG);
+    Logger::instance().addHandler(consoleHandlerPtr);
+
+    test3();
 }

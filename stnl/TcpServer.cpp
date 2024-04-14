@@ -127,12 +127,14 @@ void TcpServer::newConnectionCallback(int socketFd, SockAddr peerAddr)
 
     EventLoop* ioLoop = threadPool_->getNextLoop();
     SockAddr localAddr(SocketUtil::getLocalAddr(socketFd));
-    TcpConnectionPtr conn(new TcpConnection(ioLoop, socketFd, localAddr, peerAddr));
-    
+
     // 要保证生成的 connections_ 的 key 是唯一的
     char buf[64];
     snprintf(buf, sizeof buf, "-%s:%d", peerAddr.ip_str().c_str(), peerAddr.port());
-    connections_.emplace(name_ + buf, conn);
+    std::string connectionName = name_ + buf;
+
+    TcpConnectionPtr conn(new TcpConnection(ioLoop, connectionName, socketFd, localAddr, peerAddr));
+    connections_[connectionName] = conn;
 
     conn->setConnectionCallback(connectionCallback_);
     conn->setMessageCallback(messageCallback_);
@@ -149,10 +151,11 @@ void TcpServer::removeConnection(const TcpConnectionPtr& conn)
 void TcpServer::removeConnectionInLoop(const TcpConnectionPtr& conn)
 {
     loop_->assertInLoopThread();
-    // size_t n = connections_.erase(conn->getSockFd());
+    
     /**
      * 主线程管理TcpConnection, 建立连接和释放连接都由主线程管理。
     */
+    size_t n = connections_.erase(conn->name());
     EventLoop* ioLoop = conn->getLoop();
     ioLoop->queueInLoop(std::bind(&TcpConnection::connectionDestory, conn));
 }

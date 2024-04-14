@@ -33,7 +33,6 @@ private:
     void onMessage(const TcpConnection::TcpConnectionPtr& conn, NetBuffer* buf, Timestamp receiveTime) 
     {
         conn->send(buf);
-
     }
 
 private:
@@ -41,16 +40,25 @@ private:
 };
 
 
+/*
+    ./pingpong_server 0.0.0.0 33333 1
+*/
 int main(int argc, char* argv[])
 {
+    // std::shared_ptr<ConsoleHandler> consoleHandlerPtr = std::make_shared<ConsoleHandler>("pingpong_server", LogLevel::DEBUG);
+    // Logger::instance().addHandler(consoleHandlerPtr);
+
     if (argc < 4) {
         fprintf(stderr, "Usage: %s <ip> <port> <threads>\n", argv[0]);
         exit(1);
     }
     else {
         LOG_INFO << "PingPong Server...";
+        
 
-        SockAddr serverAddr(argv[1], atoi(argv[2]));
+        const char*ip = argv[1];
+        uint16_t port = static_cast<uint16_t>(atoi(argv[2]));
+        SockAddr serverAddr(ip, port);
         int threadCount = atoi(argv[3]);
 
         PingPongServer server(serverAddr);

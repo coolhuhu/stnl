@@ -26,7 +26,7 @@ namespace stnl
 
         static int createSocket(int domain, int type, int protocol);
 
-        static int createNonblockSocket(int domain);
+        static int createNonblockSocket(sa_family_t domain);
 
         static void shutdownWrite(int socketFd);
 

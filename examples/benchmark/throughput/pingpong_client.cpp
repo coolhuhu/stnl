@@ -113,7 +113,7 @@ public:
 
     void onConnect()
     {
-        if (numConnected_.fetch_add(1) == sessionCount_)
+        if (++numConnected_ == sessionCount_)
         {
             LOG_INFO << "all connected";
         }
@@ -121,7 +121,7 @@ public:
 
     void onDisconnect(const TcpConnection::TcpConnectionPtr &conn)
     {
-        if (numConnected_.fetch_sub(1) == 0)
+        if (--numConnected_ == 0)
         {
             LOG_INFO << "all disconnected";
 
@@ -180,12 +180,18 @@ void Session::onConnection(const TcpConnection::TcpConnectionPtr &conn)
     }
 }
 
+/*
+    pingpong的消息大小为 16KiB
+    ./pingpong_client 127.0.0.1 33333 1 16384 100 100
+*/
 int main(int argc, char *argv[])
 {
+    // std::shared_ptr<ConsoleHandler> consoleHandlerPtr = std::make_shared<ConsoleHandler>("pingpong_client", LogLevel::DEBUG);
+    // Logger::instance().addHandler(consoleHandlerPtr);
+
     if (argc != 7)
     {
-        fprintf(stderr, "Usage: client <host_ip> <port> <threads> <blocksize> ");
-        fprintf(stderr, "<sessions> <time>\n");
+        fprintf(stderr, "Usage: client <host_ip> <port> <threads> <blocksize> <sessions> <time>\n");
     }
     else
     {

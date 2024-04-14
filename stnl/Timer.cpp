@@ -15,6 +15,7 @@ namespace stnl
         int timerfd = ::timerfd_create(CLOCK_MONOTONIC, TFD_CLOEXEC | TFD_NONBLOCK);
         if (timerfd < 0) {
             // FIXME: error handle
+            LOG_ERROR << "timerfd_create error";
         }
         return timerfd;
     }
@@ -25,6 +26,7 @@ namespace stnl
         ssize_t n = ::read(timerfd, &many, sizeof(many));
         if (n != sizeof(many)) {
             // FIXME: error handle
+            LOG_ERROR << "timerfd_read error";
         }
     }
 
@@ -145,8 +147,10 @@ namespace stnl
             nextExpiration = timers_.begin()->second->expiration();
         }
 
-        // FIXME: Check whether the value is reasonable.
-        resetTimerfd(nextExpiration);
+        if (nextExpiration.valid()) {
+            resetTimerfd(nextExpiration);
+        }
+        
     }
 
     void TimerQueue::timerReadingCallback()
@@ -178,7 +182,7 @@ namespace stnl
     TimerId TimerQueue::insert(TimerCallback cb, Timestamp& when, Seconds interval)
     {
         // 在IO线程中执行
-        Timer* timer = new Timer(cb, when, interval);
+        Timer* timer = new Timer(std::move(cb), when, interval);
         TimerId id(timer->id());
         loop_->runInLoop(std::bind(&TimerQueue::insertInLoop, this, timer));
         return id;

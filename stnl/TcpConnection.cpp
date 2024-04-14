@@ -7,10 +7,13 @@
 using namespace stnl;
 using namespace std::placeholders;
 
-TcpConnection::TcpConnection(EventLoop *loop, int sockfd,
+TcpConnection::TcpConnection(EventLoop *loop, 
+                             const std::string& name,
+                             int sockfd,
                              const SockAddr &localAddr,
                              const SockAddr &peerAddr)
     : loop_(loop),
+      name_(name),
       socket_(new Socket(sockfd)),
       channel_(new Channel(loop, sockfd)),
       localAddr_(localAddr),
@@ -46,7 +49,11 @@ void TcpConnection::connectionDestory()
     {
         setSocketState(SocketState::DISCONNECTED);
         channel_->disableAll();
-        // connectionCallback_(shared_from_this());
+        if (connectionCallback_)
+        {
+            connectionCallback_(shared_from_this());
+        }
+        
     }
     channel_->remove();
 }
@@ -221,7 +228,10 @@ void TcpConnection::handleClose()
      * 延长期生命周期，保证closeCallback_能够被安全地执行完毕。
      */
     TcpConnectionPtr guardThis(shared_from_this());
-    // connectionCallback_(guardThis);
+    if (connectionCallback_)
+    {
+        connectionCallback_(guardThis);
+    }
     // closeCallback_ --> TcpConnection::connectionDestory()
     closeCallback_(guardThis);
 }

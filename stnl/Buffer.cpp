@@ -60,7 +60,7 @@ void NetBuffer::memoryMoving()
 
 void NetBuffer::append(const char *buf, size_t len)
 {
-    if (len < writeableBytes())
+    if (len <= writeableBytes())
     {
         std::copy(buf, buf + len, writeIndex());
     }
@@ -82,7 +82,6 @@ void NetBuffer::append(const char *buf, size_t len)
                 先分配更大的内存，然后再挪动位置。
             */
             buffer_.resize(writeIndex_ + len);
-            memoryMoving();
         }
         std::copy(buf, buf + len, writeIndex());
     }

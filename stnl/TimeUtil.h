@@ -55,6 +55,8 @@ namespace stnl
             return nanoSecondsSinceEpoch() - mircoSecondsSinceEpoch() * MillisecondsRatio;
         }
 
+        bool valid() const { return nanoSecondsSinceEpoch() > 0; }
+
         static Timestamp now();
 
         static Timestamp invalid()
@@ -81,6 +83,11 @@ namespace stnl
     inline bool operator==(const Timestamp& lhs, const Timestamp& rhs)
     {
         return lhs.nanoSecondsSinceEpoch() == rhs.nanoSecondsSinceEpoch();
+    }
+
+    inline bool operator>(const Timestamp& lhs, const Timestamp& rhs)
+    {
+        return lhs.nanoSecondsSinceEpoch() > rhs.nanoSecondsSinceEpoch();
     }
 
     struct timespec intervalFromNow(Timestamp when);

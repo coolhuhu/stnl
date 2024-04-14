@@ -49,7 +49,7 @@ int SocketUtil::connectSocket(int socketFd, const struct sockaddr *addr)
     if (res < 0)
     {
         // FIXME:
-        LOG_ERROR << "connect error.";
+        LOG_ERROR << "connect error. errno: " << errno;
     }
     return res;
 }
@@ -74,7 +74,7 @@ int SocketUtil::createSocket(int domain, int type, int protocol)
     return fd;
 }
 
-int SocketUtil::createNonblockSocket(int domain)
+int SocketUtil::createNonblockSocket(sa_family_t domain)
 {
     return createSocket(domain, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0);
 }

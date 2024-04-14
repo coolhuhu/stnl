@@ -42,9 +42,11 @@ void test_connectSocket()
 {
     SockAddr serverAddr("127.0.0.1", 8888);
     int socketFd = SocketUtil::createNonblockSocket(serverAddr.family());
+    SocketUtil::listenSocket(socketFd);
     int ret = SocketUtil::connectSocket(socketFd, serverAddr.getSockAddr());
     int savedErrno = (ret == 0) ? 0 : errno;
     std::cout << "saveErrno = " << savedErrno << std::endl;
+    SocketUtil::closeSocket(socketFd);
 }
 
 

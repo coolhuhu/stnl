@@ -70,6 +70,9 @@ private:
     EventLoop *loop_;
 };
 
+/*
+    ./TcpClient_test 127.0.0.1 8808
+*/
 int main(int argc, char *argv[])
 {
     if (argc > 2)

@@ -43,7 +43,7 @@ namespace stnl
 
     void Logger::addHandler(const std::shared_ptr<LogHandler> &handler)
     {
-        // @FIXME: key已存在的情况怎么处理
+        // FIXME: key已存在的情况怎么处理
         handlers_.emplace(handler->name(), handler);
     }
 
@@ -72,7 +72,8 @@ namespace stnl
     void Logger::handlerWrite(const LogContextPtr &context)
     {
         // 若没有设置LogHandler,则添加一个ConsoleHandler作为默认的LogHandler
-        if (handlers_.empty()) {
+        if (handlers_.empty())
+        {
             handlers_.emplace("DefaultConsoleHandler", std::make_shared<ConsoleHandler>("DefaultConsoleHandler", LogLevel::INFO));
         }
 
@@ -91,8 +92,8 @@ namespace stnl
 
     LogContext::LogContext(std::string_view sourceFilename, std::string funcname, int line, LogLevel logLevel) : logLevel_(logLevel)
     {
-        if (logLevel == LogLevel::FATAL) {
-
+        if (logLevel == LogLevel::FATAL)
+        {
         }
 
         struct timeval tv_;
@@ -117,7 +118,12 @@ namespace stnl
 
     /* --------------------------- LogRecorder --------------------------*/
 
-    LogRecorder::LogRecorder(const std::string_view sourceFilename, std::string funcname, int line, LogLevel logLevel, Logger &logger) : context_(new LogContext(sourceFilename, funcname, line, logLevel)), logger_(logger)
+    LogRecorder::LogRecorder(const std::string_view sourceFilename,
+                             std::string funcname, int line, 
+                             LogLevel logLevel, 
+                             Logger &logger) : 
+                             context_(new LogContext(sourceFilename, funcname, line, logLevel)), 
+                             logger_(logger)
     {
     }
 
@@ -158,7 +164,8 @@ namespace stnl
 
         std::cout << context->view();
 
-        if (context->logLevel_ == LogLevel::FATAL) {
+        if (context->logLevel_ == LogLevel::FATAL)
+        {
             std::cout.flush();
             abort();
         }
@@ -266,7 +273,7 @@ namespace stnl
             lastRollPeriod_ = newPeriod; /* 更新回滚周期 */
 
             /*
-             @todo:
+             TODO:
              这一步可以进行优化改进吗？不使用智能指针管理 LogFile 对象。
              复用同一块 buffer，绑定行的文件流，即绑定一个新的 FILE 对象。
             */
@@ -312,7 +319,8 @@ namespace stnl
             append(context);
         }
 
-        if (context->logLevel_ == LogLevel::FATAL) {
+        if (context->logLevel_ == LogLevel::FATAL)
+        {
             flush();
             abort();
         }
@@ -360,23 +368,24 @@ namespace stnl
 
     void FileHandler::flush()
     {
-        if (mutex_) {
+        if (mutex_)
+        {
             std::unique_lock<std::mutex> locker(*mutex_);
             logFile_->flush();
         }
-        else {
+        else
+        {
             logFile_->flush();
         }
     }
 
     /* -------------------------------- AsyncLogging ------------------------------- */
 
-    AsyncLogging::AsyncLogging(std::string_view logFilepath, LogLevel logLevel, int fileRollSize, 
-                               int flushInterval, int flushEveryNLine) :
-                               logFilepath_(logFilepath), fileRollSize_(fileRollSize), 
-                               logLevel_(logLevel), flushEveryNLine_(flushEveryNLine),
-                               running_(false), currentBuffer_(new Buffer(AsyncBufferSize)), latch_(1), flushInterval_(flushInterval),
-                               nextBuffer_(new Buffer(AsyncBufferSize)), thread_("AsyncLogging", std::bind(&AsyncLogging::run, this))
+    AsyncLogging::AsyncLogging(std::string_view logFilepath, LogLevel logLevel, int fileRollSize,
+                               int flushInterval, int flushEveryNLine) : logFilepath_(logFilepath), fileRollSize_(fileRollSize),
+                                                                         logLevel_(logLevel), flushEveryNLine_(flushEveryNLine),
+                                                                         running_(false), currentBuffer_(new Buffer(AsyncBufferSize)), latch_(1), flushInterval_(flushInterval),
+                                                                         nextBuffer_(new Buffer(AsyncBufferSize)), thread_("AsyncLogging", std::bind(&AsyncLogging::run, this))
     {
         currentBuffer_->clear();
         nextBuffer_->clear();

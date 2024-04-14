@@ -1,4 +1,5 @@
 #include "TimeUtil.h"
+#include "logger.h"
 #include <string>
 #include <inttypes.h>
 
@@ -29,8 +30,10 @@ std::string Timestamp::toString() const
 struct timespec stnl::intervalFromNow(Timestamp when)
 {
     auto diff = when.nanoSecondsSinceEpoch() - Timestamp::now().nanoSecondsSinceEpoch();
+    if (diff <= 0) {
+        diff = 1000;
+    }
 
-    // FIXME: if diff <= 0
     struct timespec interval;
     interval.tv_sec = static_cast<time_t>(diff / Timestamp::NanosecondsRatio);
     interval.tv_nsec = static_cast<long>(diff % Timestamp::NanosecondsRatio);

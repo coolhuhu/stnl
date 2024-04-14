@@ -14,7 +14,7 @@ file(GLOB SRC ${CMAKE_CURRENT_SOURCE_DIR}/stnl/*.cpp)
 
 set(STNL stnl)
 
-add_compile_definitions(NDEBUG)
+# add_compile_definitions(NDEBUG)
 
 add_subdirectory(stnl)
 add_subdirectory(tests)

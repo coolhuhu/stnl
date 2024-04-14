@@ -183,7 +183,7 @@ namespace stnl
 
     void EventLoop::removeChannel(Channel *channel)
     {
-        // TODO:
+        // FIXME:
 
         selector_->removeChannel(channel);
     }

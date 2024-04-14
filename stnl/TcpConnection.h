@@ -34,7 +34,11 @@ namespace stnl
 
 
     public:
-        TcpConnection(EventLoop* loop, int sockfd, const SockAddr& localAddr, const SockAddr& peerAddr);
+        TcpConnection(EventLoop* loop, 
+                      const std::string& name, 
+                      int sockfd, 
+                      const SockAddr& localAddr, 
+                      const SockAddr& peerAddr);
 
         ~TcpConnection();
 
@@ -78,6 +82,8 @@ namespace stnl
         bool isConnected() const { return socketState_ == SocketState::CONNECTED; }
         bool isDisconnected() const { return socketState_ == SocketState::DISCONNECTED; }
 
+        std::string name() { return name_; }
+
 
     private:
         // 处理已连接socket上的读、写、关闭和异常
@@ -95,6 +101,7 @@ namespace stnl
 
     private:
         EventLoop* loop_;
+        std::string name_;
         std::unique_ptr<Socket> socket_;
         std::unique_ptr<Channel> channel_;
         SockAddr localAddr_;
